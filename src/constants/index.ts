@@ -1,5 +1,5 @@
-const MAX_IMAGE_COUNT = 4;
-const MAX_VIDEO_COUNT = 1;
+const MAX_IMAGE_COUNT = 10;
+const MAX_VIDEO_COUNT = 4;
 
 const MAX_IMAGE_SIZE = 10 * 1024 * 1024; // 10MB
 const MAX_VIDEO_SIZE = 100 * 1024 * 1024; // 100MB
@@ -49,6 +49,9 @@ const AUTH_TOKEN_KEY = 'AuthToken';
 const ACCESS_TOKEN_KEY = 'AccessToken';
 const REFRESH_TOKEN_KEY = 'RefreshToken';
 
+// Key for storing in localStorage
+const STORAGE_KEY = 'encryptedLoginData';
+
 export {
   ACCESS_TOKEN_KEY,
   allowedImageTypes,
@@ -63,4 +66,5 @@ export {
   PREVIEW_SLUG,
   REFRESH_TOKEN_KEY,
   SHORT_POST_LENGTH,
+  STORAGE_KEY
 };

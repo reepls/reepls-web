@@ -45,7 +45,7 @@ const BlogProfile: React.FC<BlogProfileProps> = ({ user, date, article_id, title
 
   // Extract followed IDs from User objects
   useEffect(() => {
-    const followedIds = followings?.data?.map((following: Follow) => following.followed_id.id) || [];
+    const followedIds = followings?.data?.map((following: Follow) => following.followed_id?.id) || [];
     setIsFollowing(followedIds.includes(user?.id));
   }, [followings, user?.id]);
 
@@ -81,14 +81,14 @@ const BlogProfile: React.FC<BlogProfileProps> = ({ user, date, article_id, title
     if (isFollowPending || isUnfollowPending || !user?.id) return;
 
     if (isFollowing) {
-      unfollowUser(user.id, {
+      unfollowUser(user?.id, {
         onSuccess: () => {
           toast.success('User unfollowed successfully');
         },
         onError: () => toast.error('Failed to unfollow user'),
       });
     } else {
-      followUser(user.id, {
+      followUser(user?.id, {
         onSuccess: () => {
           toast.success('User followed successfully');
         },
@@ -104,7 +104,7 @@ const BlogProfile: React.FC<BlogProfileProps> = ({ user, date, article_id, title
 
   useEffect(() => {
     console.log('followings', followings);
-    const isSaved = savedArticles?.some((article: Article) => article._id === article_id);
+    const isSaved = savedArticles?.articles?.some((article: Article) => article._id === article_id);
     setSaved(isSaved || false);
   }, [savedArticles, article_id, followings]);
 
@@ -119,6 +119,7 @@ const BlogProfile: React.FC<BlogProfileProps> = ({ user, date, article_id, title
     if (isRemovePending) return 'Removing...';
     return saved ? 'Unsave Post' : 'Add To Saved';
   };
+
 
   // If user is null, return null or a fallback UI
   if (!user) {
@@ -156,7 +157,7 @@ const BlogProfile: React.FC<BlogProfileProps> = ({ user, date, article_id, title
         {showMenu ? (
           <X className="size-4 cursor-pointer" onClick={() => setShowMenu(!showMenu)} />
         ) : (
-          <EllipsisVertical className="size-4 cursor-pointer" onClick={() => setShowMenu(!showMenu)} />
+          <EllipsisVertical className="size-3 cursor-pointer" onClick={() => setShowMenu(!showMenu)} />
         )}
         {showMenu && (
           <>
