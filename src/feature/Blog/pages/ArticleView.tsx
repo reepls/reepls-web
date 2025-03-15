@@ -43,6 +43,7 @@ const ArticleView: React.FC = () => {
       title,
       subTitle,
       content,
+      htmlContent: htmlArticleContent,
       media,
       status: 'Published',
       type: 'LongForm',
