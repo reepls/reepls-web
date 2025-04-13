@@ -4,6 +4,16 @@ export enum UserRole {
   Writer = 'Writer',
 }
 
+export enum MediaType {
+  Video = 'video',
+  Image = 'image',
+}
+
+export type MediaItem = {
+  url: string;
+  type: MediaType;
+};
+
 export interface AuthTokens {
   access: {
     token: string;
@@ -28,7 +38,7 @@ export interface User {
   role?: UserRole;
   profile_picture?: string;
   saved_articles?: string[];
-  banner_image?: string;
+  banner_picture?: string;
   bio?: string;
   about?: string;
   address?: string;
@@ -53,12 +63,12 @@ export interface Article {
   title?: string;
   type?: 'ShortForm' | 'LongForm';
   is_communiquer?: boolean;
-  subTitle?: string;
+  subtitle?: string;
   content?: string;
   htmlContent?: string;
   category?: string[];
   keywords?: string[];
-  media?: string[];
+  media?: MediaItem[];
   text_to_speech?: string;
   flagged?: boolean;
   author_id?: User;
@@ -67,6 +77,7 @@ export interface Article {
   updatedAt?: string;
   views_count?: number;
   reports_count?: number;
+  slug?: string;
   _id?: string;
   shares_count?: number;
   isArticle?: boolean;
@@ -83,6 +94,7 @@ export interface Comment {
   replies?: Comment[];
   _id?: string;
   author?: User;
+  comment_id?:string;
 }
 
 export interface Follow {

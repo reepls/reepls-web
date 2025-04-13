@@ -1,7 +1,6 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import InputField from '../components/InputField';
 import '../styles/authpages.scss';
-// import {useNavigate } from "react-router-dom";
 import { useTranslation } from 'react-i18next';
 import { LuLoader } from 'react-icons/lu';
 import { useSelector } from 'react-redux';
@@ -10,25 +9,57 @@ import { RootState } from '../../../store';
 import { validatePassword } from '../../../utils/validatePassword';
 import { useLoginUser } from '../hooks/AuthHooks';
 import { useStoreCredential } from '../hooks/useStoreCredential';
+import { toast } from 'react-toastify'; // Added for toast notifications
 
 function Loginwithemail() {
   const { t } = useTranslation();
   const { storeEmail, storePassword } = useStoreCredential();
   const { email: enteredEmail, password: enteredPassword } = useSelector((state: RootState) => state.user);
 
-  //custom'hooks
+  // Custom hooks
   const Login = useLoginUser();
-  // const { storeAccessToken,storeRefreshToken } = useTokenStorage();
 
-  //states
+  // States
   const [email, setEmail] = useState<string>('');
   const [password, setPassword] = useState<string>('');
   const [passwordInputError, setPasswordInputError] = useState<boolean>(false);
 
-  //navigate
-  // const navigate = useNavigate();
+  // Function to get friendly error messages specific to email login
+  const getFriendlyErrorMessage = (error: any): string => {
+    if (!error) return t('GenericErrorMessage', { defaultValue: "Something went wrong. Please try again." });
 
-  //functions to handle DOM events
+    // Handle common error cases
+    if (error.message.includes("Network Error")) {
+      return t('NetworkErrorMessage', { defaultValue: "Oops! Looks like you’re offline. Check your connection and try again." });
+    }
+    if (error.response) {
+      const status = error.response.status;
+      if (status === 401) {
+        return t('AuthErrorMessage', { defaultValue: "Incorrect email or password. Please try again." });
+      }
+      if (status === 404) {
+        return t('NotFoundErrorMessage', { defaultValue: "We couldn’t find an account with that email." });
+      }
+      if (status === 500) {
+        return t('ServerErrorMessage', { defaultValue: "Our servers are having a moment. Please try again soon!" });
+      }
+      if (status === 429) {
+        return t('RateLimitErrorMessage', { defaultValue: "Too many login attempts! Please wait a bit and try again." });
+      }
+    }
+
+    // Default fallback for unhandled errors
+    return t('UnexpectedErrorMessage', { defaultValue: "Something unexpected happened during login. Please try again." });
+  };
+
+  // Toast error notification
+  useEffect(() => {
+    if (Login.error) {
+      toast.error(getFriendlyErrorMessage(Login.error));
+    }
+  }, [Login.error]);
+
+  // Functions to handle DOM events
   const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const passwordValue = e.target.value;
     setPassword(passwordValue);
@@ -59,6 +90,16 @@ function Loginwithemail() {
     });
   };
 
+  const handleGoogleLogin = () => {
+    // Construct the Google OAuth2 URL
+    const googleAuthUrl = `https://accounts.google.com/o/oauth2/v2/auth?response_type=code&redirect_uri=${encodeURIComponent(
+      'http://localhost:5000/api-v1/googleAuth/google/callback'
+    )}&scope=profile%20email&client_id=276268262458-4j71v7s7krk3h4j47d49gp5q72msvdh3.apps.googleusercontent.com`;
+
+    // Redirect the user to the Google OAuth2 URL
+    window.location.href = googleAuthUrl;
+  };
+
   return (
     <div className="register__phone__container">
       <div className="insightful__texts">
@@ -82,20 +123,28 @@ function Loginwithemail() {
           isInputError={passwordInputError}
           inputErrorMessage={t('IncorrectPasswordMessage')}
         />
-        {Login.error && <div>{Login.error.message}</div>}
-        <button type="submit" className=" hover:text-white">
+        {Login.error && (
+          <div className="text-neutral-50 text-center py-2">
+            {getFriendlyErrorMessage(Login.error)}
+          </div>
+        )}
+        <button type="submit" className="hover:text-white" disabled={Login.isPending}>
           {Login.isPending && <LuLoader className="animate-spin text-foreground inline-block mx-4" />}
-          {Login.isPending ? 'Loging in......' : t('ContinueButton')}
+          {Login.isPending ? 'Logging in...' : t('ContinueButton')}
         </button>
         <div className="divider">
           <p>{t('OrDivider')}</p>
         </div>
-        <button type="button" className="create__account__btn hover:bg-primary-500 hover:text-white">
-          <img src={google} alt="google_image" />
-          <span className="text-neutral-100 ">{t('Create account with google')}</span>
-        </button>
+        <div
+          className="flex items-center justify-center gap-2 bg-background rounded-full px-2 py-3 text-neutral-50 shadow-md hover:shadow-none cursor-pointer"
+          onClick={handleGoogleLogin}
+        >
+          <img src={google} alt="google_image" className="size-6" />
+          <span>{t("Login with google")}</span>
+        </div>
       </form>
       <div className="bottom__links">
+        {/* Uncomment and implement if needed */}
         {/* <div className="alternate__email" onClick={navigateToSignInWithPhone}>
           {t("AlternateSignInWithPhone")}
         </div> */}

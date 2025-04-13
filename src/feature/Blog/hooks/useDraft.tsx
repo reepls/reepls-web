@@ -1,22 +1,24 @@
+import { MediaItem } from '../../../models/datamodels';
+
 type DraftArticle = {
   title: string;
-  subTitle: string;
+  subtitle: string;
   content: string;
   htmlContent: string;
-  media: string[];
+  media: MediaItem[];
 };
 
 type DraftPost = {
   content: string;
-  media: string[];
+  media: MediaItem[];
 };
 
 const useDraft = () => {
   return {
-    saveDraftArticle: ({ title, subTitle, content, htmlContent, media }: DraftArticle) => {
+    saveDraftArticle: ({ title, subtitle, content, htmlContent, media }: DraftArticle) => {
       const article: DraftArticle = {
         title,
-        subTitle,
+        subtitle,
         content,
         htmlContent,
         media,

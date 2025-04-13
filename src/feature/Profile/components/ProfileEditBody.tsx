@@ -1,15 +1,28 @@
-import React, { ReactNode, useRef, useState } from "react";
-import profileImage from "../../../assets/images/profile__image.svg";
-import ImageBanner from "../../../assets/images/image__banner.svg";
-import { Camera } from "lucide-react";
+import { Camera } from 'lucide-react';
+import React, { ReactNode, useEffect, useRef, useState } from 'react';
+import { toast } from 'react-toastify';
+import { useUser } from '../../../hooks/useUser';
+import { uploadUserBanner, uploadUserProfile } from '../../../utils/media';
+import { User } from '../../../models/datamodels';
+import { Pics } from '../../../assets/images';
+import { useUpdateUser } from '../hooks';
 
 interface ProfileBodyProps {
   children: ReactNode;
+  user?: User; // Made user optional to handle undefined case
 }
 
-const ProfileEditBody: React.FC<ProfileBodyProps> = ({ children }) => {
-  const [bannerImage, setBannerImage] = useState<string>(ImageBanner);
-  const [profileImg, setProfileImg] = useState<string>(profileImage);
+const ProfileEditBody: React.FC<ProfileBodyProps> = ({ children, user }) => {
+  const { authUser } = useUser();
+  const {mutate} = useUpdateUser()
+
+  // Safely handle initial state with fallback if user is undefined
+  const [bannerImage, setBannerImage] = useState<string | undefined>(() => {
+    return user?.banner_picture || Pics.bannerPlaceholder;
+  });
+  const [profileImg, setProfileImg] = useState<string | undefined>(() => {
+    return user?.profile_picture || Pics.imagePlaceholder;
+  });
 
   const bannerInputRef = useRef<HTMLInputElement>(null);
   const profileInputRef = useRef<HTMLInputElement>(null);
@@ -28,7 +41,14 @@ const ProfileEditBody: React.FC<ProfileBodyProps> = ({ children }) => {
       const reader = new FileReader();
       reader.onload = (e) => setBannerImage(e.target?.result as string);
       reader.readAsDataURL(file);
-      submitBannerImage(file);
+      submitBannerImage(file)
+        .then((data) => {
+          mutate({banner_picture:data})
+          toast.success('Successfully updated banner image');
+        })
+        .catch(() => {
+          toast.error('New banner could not be uploaded');
+        });
     }
   };
 
@@ -38,17 +58,43 @@ const ProfileEditBody: React.FC<ProfileBodyProps> = ({ children }) => {
       const reader = new FileReader();
       reader.onload = (e) => setProfileImg(e.target?.result as string);
       reader.readAsDataURL(file);
-      submitProfileImage(file);
+      submitProfileImage(file)
+        .then((data) => {
+          mutate({profile_picture:data})
+          toast.success('Successfully updated profile image');
+          
+        })
+        .catch(() => {
+          toast.error('New profile picture could not be uploaded');
+        });
     }
   };
 
-  const submitBannerImage = (file: File) => {
-    console.log("Submitting banner image:", file);
+  const submitBannerImage = async (file: File) => {
+    if (!authUser?.id) {
+      toast.error('You must be logged in to upload a banner image');
+      return;
+    }
+    const url = await uploadUserBanner(authUser.id, file);
+    setBannerImage(url);
+    return url;
   };
 
-  const submitProfileImage = (file: File) => {
-    console.log("Submitting profile image:", file);
+  const submitProfileImage = async (file: File) => {
+    if (!authUser?.id) {
+      toast.error('You must be logged in to upload a profile image');
+      return;
+    }
+    const url = await uploadUserProfile(authUser.id, file);
+    setProfileImg(url);
+    return url;
   };
+
+  useEffect(()=>{
+    console.log('profile',profileImg);
+    console.log('banner',bannerImage);
+
+  },[profileImg,bannerImage])
 
   return (
     <>
@@ -80,10 +126,9 @@ const ProfileEditBody: React.FC<ProfileBodyProps> = ({ children }) => {
           alt="profile"
           className="w-28 h-28 rounded-full border-2 border-white shadow-lg absolute bottom-0 left-4 translate-y-1/2"
         />
-
         <button
           onClick={handleProfileClick}
-          className="absolute  -bottom-3 left-14  bg-black/60 p-2 rounded-full"
+          className="absolute -bottom-3 left-14 bg-black/60 p-2 rounded-full"
         >
           <Camera size={20} color="white" />
         </button>

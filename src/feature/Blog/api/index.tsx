@@ -14,6 +14,12 @@ const getArticleById = async (articleId: string) => {
   const { data } = await apiClient.get(`/articles/get-by-id/${articleId}`);
   return data;
 };
+// Fetch a single article by slug
+export const getArticleBySlug = async (slug: string) => {
+  console.log("Fetching article with ID:", slug);
+  const { data } = await apiClient.get(`/articles/slug/${slug}`);
+  return data;
+};
 
 // Fetch articles by author ID
 const getArticleByAuthorId = async (authorId: string) => {
@@ -44,6 +50,22 @@ const getCommuniquerArticles = async ({ pageParam = 1 }) => {
   return data;
 };
 
+
+
+export const getAuthorPosts = async ({ pageParam = 1, authorId }:{pageParam:number, authorId:string}) => {
+  console.log(`Fetching posts for author ${authorId}, page ${pageParam}`);
+  const { data } = await apiClient.get(`/articles/author/${authorId}/posts?page=${pageParam}&limit=10`);
+  console.log("Author posts response:", data);
+  return data;
+};
+
+export const getAuthorArticles = async ({ pageParam = 1, authorId }:{pageParam:number, authorId:string}) => {
+  console.log(`Fetching articles for author ${authorId}, page ${pageParam}`);
+  const { data } = await apiClient.get(`/articles/author/${authorId}/articles?page=${pageParam}&limit=10`);
+  console.log("Author articles response:", data);
+  return data;
+};
+
 // Fetch recommended articles
 const getRecommendedArticles = async () => {
   console.log("Fetching recommended articles");
@@ -61,7 +83,7 @@ const getArticlesByCategory = async (category: string) => {
 // Update an article by ID
 const updateArticle = async (articleId: string, article: Article) => {
   console.log("Updating article with ID:", articleId, "Data:", article);
-  const { data } = await apiClient.patch(`/articles/${articleId}`, article);
+  const { data } = await apiClient.put(`/articles/${articleId}`, article);
   return data;
 };
 

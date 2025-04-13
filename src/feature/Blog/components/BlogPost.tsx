@@ -1,6 +1,8 @@
 import React, { useContext, useState } from 'react';
+import { ErrorBoundary } from 'react-error-boundary';
+import ErrorFallback from '../../../components/molecules/ErrorFallback/ErrorFallback';
 import { CognitiveModeContext } from '../../../context/CognitiveMode/CognitiveModeContext';
-import { User } from '../../../models/datamodels';
+import { Article } from '../../../models/datamodels';
 import BlogArticleHeader from './BlogArticleHeader';
 import BlogImagery from './BlogComponents/BlogImagery';
 import BlogMessage from './BlogComponents/BlogMessage';
@@ -9,23 +11,10 @@ import BlogReactionSession from './BlogComponents/BlogReactionSession';
 import BlogReactionStats from './BlogComponents/BlogReactionStats';
 
 interface BlogPostProps {
-  media: string[];
-  title: string;
-  subTitle?: string;
-  content: string;
-  date: string;
-  isArticle: boolean;
-  article_id: string;
-  user: User;
+  article: Article;
 }
 
-// const sampleImages = [
-//   "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-//   "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-//   "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-// ];
-
-const BlogPost: React.FC<BlogPostProps> = ({ media, title, subTitle, content, date, isArticle, article_id, user }) => {
+const BlogPost: React.FC<BlogPostProps> = ({ article }) => {
   const { isCognitiveMode } = useContext(CognitiveModeContext);
   const [isCommentSectionOpen, setIsCommentSectionOpen] = useState<boolean>(false);
 
@@ -33,31 +22,49 @@ const BlogPost: React.FC<BlogPostProps> = ({ media, title, subTitle, content, da
     setIsCommentSectionOpen(!isCommentSectionOpen);
   };
 
+  if (!article) {
+    return <div>Empty Article</div>;
+  }
+
   return (
-    <div className="each_blog_post mt-5 shadow-md p-2 max-w-[680px] self-center w-full bg-background">
-      {isArticle && <BlogArticleHeader />}
+    <div
+      className={`each_blog_post mt-5 shadow-sm p-2 max-w-[680px]  self-center w-full bg-background`}>
+      {article.isArticle && <BlogArticleHeader />}
       <BlogProfile
-        title={title}
-        user={user}
-        content={content}
-        date={date}
-        article_id={article_id}
-        isArticle={isArticle}
+        title={article.title || ''}
+        user={article.author_id || {}}
+        content={article.content || ''}
+        date={article.createdAt || ''}
+        article_id={article._id || ''}
+        isArticle={article.isArticle || false}
       />
       <BlogMessage
-        title={title}
-        content={isArticle ? subTitle ?? '' : content}
-        article_id={article_id}
-        isArticle={isArticle}
+        title={article.title || ''}
+        content={article.content || ''}
+        article_id={article._id || ''}
+        isArticle={article.isArticle || false}
+        slug={article.slug || ''}
       />
-      {!isCognitiveMode && media.length > 0 && <BlogImagery media={media} />}
-      <BlogReactionStats toggleCommentSection={toggleCommentSection} date={date} article_id={article_id} />
+      <ErrorBoundary
+        FallbackComponent={ErrorFallback}
+        onError={(error, info) => {
+          console.error('Error caught by ErrorBoundary:', error, info);
+        }}>
+        {!isCognitiveMode && article?.media && <BlogImagery media={article.media} />}
+      </ErrorBoundary>
+
+      <BlogReactionStats
+        toggleCommentSection={toggleCommentSection}
+        date={article.createdAt || ''}
+        article_id={article._id || ''}
+      />
       <BlogReactionSession
         isCommentSectionOpen={isCommentSectionOpen}
-        message={content}
-        article_id={article_id}
+        message={article.content || ''}
+        article_id={article._id || ''}
         setIsCommentSectionOpen={toggleCommentSection}
-        author_of_post={user}
+        author_of_post={article.author_id || {}}
+        text_to_speech={article.text_to_speech || ''}
       />
     </div>
   );

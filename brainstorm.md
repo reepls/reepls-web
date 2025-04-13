@@ -2,7 +2,6 @@
 
 Are the recommended articles real?
 
-fabricekongnyuy2@gmail.com
 Ilovemydreams1#
 
 VITE_GIPHY_API_KEY
@@ -226,7 +225,7 @@ Editor command addtions
 
 To do
 
-- Add Error boundary to app
+-
 - -Demarkating what a logged in vs anonymous user can do
   -How should articles be demacarted for maximum engagement?
   -What makes a post a communique
@@ -241,4 +240,121 @@ Posting works[Limit on length of subtitle, title, comments]
 
 Reading History()
 
-=
+==============
+
+Clean up work
+
+1. The language picker in /auth to be like the one on the home page
+2. On email login /auth/login/email, Button should be login with google since its a login page
+3. The slidesow on /auth does not still have any images. the transition of the text under the slide show should
+   also be improved if possible
+4. It seems create account with google and login with google have not actually been implemented
+5. Reduce/remove unnecessary console logs in the code base
+6. See more/see less should only be visble when the actual content is too long
+   7.Remove filler/default content: profile iomage/banner, [default about, bio, town on profile]
+7. Feature: display the writers profile on th article view page? Add the ability to add comments, reactions to articles
+8. Centralise the articles content on the page?
+9.
+
+For me
+
+- Fetching users media
+- uploading media from posting
+-
+
+Mobile
+-Articles dont display their content but instead just the title and a link to continue reading where it rendered full page
+-anonymous mood tries to load suggestions in search page causing errors
+-remove filler info like recent seraches on search page or filler post on feed if currently there
+-when signing up/in with google after signing redirects one to localhost:500/api-v1/... for some reason
+-Display name not username
+
+- I cannot sign in with email and password as i get an alet with 400 code fail after entering the verification code
+
+- Verified badge immediately shows when I create an account/ is that a backend or frontend problem? - the account is not verified
+  -Upgrade rebrand: replace the names to reepls and the logos as needed
+- Should not be able to create empty content: comments, posts, articles, etc
+- Support for non-Cameroonian phone numbers
+- Backend: pleas use the user's name not email to generate the username
+- When updating the profile, check that the username cannot have spaces; I am able to make my username have spaces (both frontend and backend)
+
+When a user
+-deletes a post (the correspoding media is in the media property)
+-deletes an article(the correspoding media is in the media property)
+-changes their profile picture
+-changes their banner
+
+it has to be removed from storages
+To remove the media
+-the filename is the media id which you can use to delete the media from cloudinary
+-split the url of the media by / and take the last element; remove extension by splitting by . and taking first
+-delete the resource by id using the cloudinary api; if it fails, ignore (make a log of it)
+
+========
+
+Clear the local stored article
+No toast for reactions and comments
+Animations for reactions
+Sharing the link
+Padding on article posting page
+Play vids
+
+Error boundary redesign
+When fetching fails, always toast (eg, user with this username not found, etc)
+
+Now I think of it, the platform should not have suported videos
+
+Problems from backend: sending media as object, not changing the username, google auth,
+
+preference should include user choosing to have cognitive mode on etc
+
+---
+
+-After changing profile, refresh the page and refetch the user because stuff has changed
+-No importing from public
+-profile settings is not autofilled like profile edit; infact why are the two differebt pages when doing the same thing? Keep /setting and both of them
+direct to it
+prevnt iinexyt from console logging
+
+========
+THis is my idea for implementation of the TTS
+
+The way it works is that you an article whose speech has alreay been generated will have article.text_to_speech
+if not you call the api to generate it
+
+I am think that for articles, we can keep what I have instead (look at article titled: Advancements in AI Technology: Transforming the Future
+) to see how it looks;
+I have put it in ArticleAudioControls.tsx
+
+Now I think for short posts, it can be different: since the shortform posts are read on the feed and many ot them are showing at a time,
+if you you can get a situation where like 5 are plaing at the same time and you might even loose track of what you click to play. That is why
+i creayed a audioprovider.tsx that handles the current playing post so if you click another post, if anyone was playing it stops and the current one plays. That is what I hoped to implement in ReadingControls.tsx but it is not complete
+
+- No top bar on article view page
+- save next to author + share
+- Floating reaction for actions (save, share, )
+- Two input fields on comments
+- Differentiation between comments and sub-comment
+- Tag user for reply to reply
+- Tagging users
+- Limit possible emojis
+- Policy for expletives (article + pos)
+- Complete freedom of spech - send articles with expletives to admin
+- Edit+(Delete postponed) posts/articles
+- Very sensitive to expletives in comments
+- https://unrealspeech.com/studio
+- Less invasive notification for post
+- Notifications sound
+- reepls dashboard
+
+- Reading History
+- Vocabulary
+
+- position the modal for reactions
+- Reporting
+- tylenol, ibuprofen, dayquill
+
+- Somehow auth still has lots of issues
+- Still receiving useless messages like respinse fail with .. instead of useful erros
+
+- Tag input

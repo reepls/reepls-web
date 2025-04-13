@@ -8,10 +8,14 @@ import {
   getAllArticles,
   getArticleByAuthorId,
   getArticleById,
+  getArticleBySlug,
   getArticlesByCategory,
+  getAuthorArticles,
+  getAuthorPosts,
   getCommuniquerArticles,
   getFollowedArticles,
   getRecommendedArticles,
+
   updateArticle,
 } from '../api';
 // Hook for creating an article
@@ -39,6 +43,14 @@ export const useGetArticleById = (articleId: string) => {
     queryKey: ['article', articleId],
     queryFn: () => getArticleById(articleId),
     enabled: articleId !== PREVIEW_SLUG,
+  });
+};
+// Hook for fetching a single article by ID
+export const useGetArticleBySlug = (slug: string) => {
+  return useQuery({
+    queryKey: ['article', slug],
+    queryFn: () => getArticleBySlug(slug),
+    enabled:slug !== PREVIEW_SLUG,
   });
 };
 
@@ -106,6 +118,42 @@ export const useGetCommuniquerArticles = () => {
   });
 };
 
+
+
+
+export const useGetAuthorPosts = (authorId: string) => {
+  return useInfiniteQuery({
+    queryKey: ["authorPosts", authorId],
+    queryFn: ({ pageParam }) => getAuthorPosts({ pageParam, authorId }),
+    initialPageParam: 1,
+    getNextPageParam: (lastPage, allPages) => {
+      const postsFetched = allPages.length * 10; // 10 posts per page
+      if (postsFetched < lastPage.totalPosts) {
+        return allPages.length + 1;
+      }
+      return undefined;
+    },
+    enabled: !!authorId, 
+  });
+};
+
+export const useGetAuthorArticles = (authorId: string) => {
+  return useInfiniteQuery({
+    queryKey: ["authorArticles", authorId],
+    queryFn: ({ pageParam }) => getAuthorArticles({ pageParam, authorId }),
+    initialPageParam: 1,
+    getNextPageParam: (lastPage, allPages) => {
+      const articlesFetched = allPages.length * 10; // 10 articles per page
+      if (articlesFetched < lastPage.totalArticles) {
+        return allPages.length + 1;
+      }
+      return undefined;
+    },
+    enabled: !!authorId, 
+  });
+};
+
+
 // Hook for fetching recommended articles
 export const useGetRecommendedArticles = () => {
   return useQuery({
@@ -126,18 +174,17 @@ export const useGetArticlesByCategory = (category: string) => {
 // Hook for updating an article
 export const useUpdateArticle = () => {
   const queryClient = useQueryClient();
-  const navigate = useNavigate();
+
 
   return useMutation({
     mutationFn: ({ articleId, article }: { articleId: string; article: Article }) => updateArticle(articleId, article),
-    onSuccess: (data, variables) => {
+    onSuccess: (data) => {
       console.log('Article updated:', data);
-      // Invalidatx the "article" and "articles" queries to refresh the data
       queryClient.invalidateQueries({
-        queryKey: ['article', variables.articleId],
+        queryKey: ['article'],
       });
       queryClient.invalidateQueries({ queryKey: ['articles'] });
-      navigate(`/articles/${variables.articleId}`);
+     
     },
     onError: (error) => {
       console.error('Error updating article:', error);
@@ -148,7 +195,6 @@ export const useUpdateArticle = () => {
 // Hook for deleting an article
 export const useDeleteArticle = () => {
   const queryClient = useQueryClient();
-  const navigate = useNavigate();
 
   return useMutation({
     mutationFn: (articleId: string) => deleteArticle(articleId),
@@ -156,7 +202,7 @@ export const useDeleteArticle = () => {
       console.log('Article deleted');
       // Invalidatx the "articles" query to refresh the list
       queryClient.invalidateQueries({ queryKey: ['articles'] });
-      navigate('/articles');
+      
     },
     onError: (error) => {
       console.error('Error deleting article:', error);

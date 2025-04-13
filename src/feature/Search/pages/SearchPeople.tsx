@@ -1,83 +1,104 @@
 import React, { useEffect } from 'react';
 import AuthorComponent from '../../Saved/Components/AuthorComponent';
 import { useUser } from '../../../hooks/useUser';
-import { useGetFollowing } from '../../Follow/hooks';
-import { Follow, User } from '../../../models/datamodels';
-import { useGetTrendingAuthors } from '../../Feed/hooks';
+import { useGetPeopleResults } from '../hooks';
+import { toast } from 'react-toastify'; // Added for toast notifications
 
-export interface Contributor {
-  authorId: string;
-  totalViews: number;
-  totalShares: number;
-  totalPositiveReactions: number;
-  positiveReactionCounts: {
-    like: number;
-    clap: number;
-    love: number;
-    smile: number;
-    cry: number;
-  };
-  engagementRate: string;
-  weightedScore: string;
-  author: User;
+interface SearchResult {
+  _id: string;
+  username: string;
+  type: string;
+  score: number;
+  isFollowing: boolean;
 }
 
-export interface TrendingAuthorCategory {
-  leaderIn: string;
-  contributors: Contributor[];
+interface SearchPeopleProps {
+  query: string;
 }
 
-const SearchPeople: React.FC = () => {
+const SearchPeople: React.FC<SearchPeopleProps> = ({ query }) => {
   const { authUser } = useUser();
-  const { data: followingsData } = useGetFollowing(authUser?.id || "");
-  const { data: trendingAuthors, isLoading, error } = useGetTrendingAuthors();
+  const { data: searchResults, isLoading, error } = useGetPeopleResults(query);
 
+  // Function to get friendly error messages specific to people search results
+  const getFriendlyErrorMessage = (error: any): string => {
+    if (!error) return "Something went wrong while searching for people.";
+
+    // Handle common error cases
+    if (error.message.includes("Network Error")) {
+      return "Oops! Looks like you’re offline. Check your connection and try again.";
+    }
+    if (error.response) {
+      const status = error.response.status;
+      if (status === 404) {
+        return `No people found for "${query}". Try a different search!`;
+      }
+      if (status === 500) {
+        return "Our search system is having a moment. Please try again soon!";
+      }
+      if (status === 429) {
+        return "Too many searches! Give us a moment to catch up.";
+      }
+    }
+
+    // Default fallback for unhandled errors
+    return `Something unexpected happened while searching people for "${query}".`;
+  };
+
+  // Toast error notification
   useEffect(() => {
-    console.log('author id', authUser?.id);
-    console.log('trending authors', trendingAuthors);
-  }, [authUser, trendingAuthors]);
+    if (error) {
+      toast.error(getFriendlyErrorMessage(error));
+    }
+  }, [error]);
 
-  const followings = followingsData?.data || [];
+  // Debug log
+  useEffect(() => {
+    console.log('user id', authUser?.id);
+    console.log('search results', searchResults);
+  }, [authUser, searchResults]);
 
+  // Loading state
+  if (isLoading) {
+    return (
+      <div className="people w-full min-w-[350px] max-w-[360px] flex flex-col items-center flex-shrink-0">
+        <div className="space-y-4 mt-4">
+          <p className="text-neutral-500 text-center">Loading search results...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <div className="people w-full min-w-[350px] max-w-[360px] flex flex-col items-center flex-shrink-0">
+        <div className="space-y-4 mt-4">
+          <p className="text-neutral-50 text-center py-4">
+            {getFriendlyErrorMessage(error)}
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // Success or empty state
   return (
-    <div className="people">
-      {/* Section for People You Follow */}
+    <div className="people w-full min-w-[350px] max-w-[360px] flex flex-col items-center flex-shrink-0">
       <div className="space-y-4 mt-4">
-        <p className="text-lg font-semibold">People You Follow</p>
-        {followings.length > 0 ? (
-          followings.map((following: Follow) => (
+        {searchResults?.length > 0 ? (
+          searchResults.map((person: SearchResult) => (
             <AuthorComponent
-              key={following.followed_id?.user_id}
-              user={following?.followed_id}
+              key={person._id}
+              username={person.username}
             />
           ))
         ) : (
-          <p className="text-neutral-500 text-center">No followings yet</p>
+          <p className="text-neutral-500 text-center py-4">
+            No people found for "{query}". Try something else!
+          </p>
         )}
       </div>
-
-      {/* Trending Authors Sections */}
-      {isLoading ? (
-        <p className="text-neutral-500 text-center mt-4">Loading trending authors...</p>
-      ) : error ? (
-        <p className="text-red-500 text-center mt-4">Error: {error.message}</p>
-      ) : (
-        trendingAuthors?.map((category:TrendingAuthorCategory) => (
-          <div key={category.leaderIn} className="space-y-4 mt-4">
-            <p className="text-lg font-semibold">Leading in {category.leaderIn}</p>
-            {category.contributors.length > 0 ? (
-              category.contributors.map((contributor) => (
-                <AuthorComponent
-                  key={contributor.authorId}
-                  user={contributor.author}
-                />
-              ))
-            ) : (
-              <p className="text-neutral-500 text-center">No trending authors in this category</p>
-            )}
-          </div>
-        ))
-      )}
     </div>
   );
 };

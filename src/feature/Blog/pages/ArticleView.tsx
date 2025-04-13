@@ -5,7 +5,7 @@ import { toast } from 'react-toastify';
 import { Editor } from 'reactjs-tiptap-editor';
 import Topbar from '../../../components/atoms/Topbar/Topbar';
 import { PREVIEW_SLUG } from '../../../constants';
-import { Article } from '../../../models/datamodels';
+import { Article, MediaItem } from '../../../models/datamodels';
 import { useSaveArticle } from '../../Saved/hooks';
 import BlogReactionStats from '../components/BlogComponents/BlogReactionStats';
 import CreatePostTopBar from '../components/CreatePostTopBar';
@@ -19,10 +19,10 @@ const ArticleView: React.FC = () => {
   const navigate = useNavigate();
   const { articleUid } = useParams(); // use to fetch article from db
   const [title, setTitle] = useState<string>('*This article does not have a title*');
-  const [subTitle, setSubTitle] = useState<string>('');
+  const [subtitle, setsubtitle] = useState<string>('');
   const [content, setContent] = useState<string>('');
   const [htmlArticleContent, setHtmlArticleContent] = useState<string>('*This article does not have any content*');
-  const [media, setMedia] = useState<string[]>([]);
+  const [media, setMedia] = useState<MediaItem[]>([]);
   const [isPreview, _] = useState<boolean>(articleUid === PREVIEW_SLUG);
   const { loadDraftArticle } = useDraft();
   const editorRef = useRef<{ editor: Editor | null }>(null);
@@ -32,7 +32,7 @@ const ArticleView: React.FC = () => {
   const { data: article, isError, isPending } = useGetArticleById(articleUid!);
 
   const onPublish = async () => {
-    if (!title || !subTitle || !content) {
+    if (!title || !subtitle || !content) {
       toast.error('Please provide a title, subtitle and content.', {
         autoClose: 1500,
       });
@@ -41,7 +41,7 @@ const ArticleView: React.FC = () => {
 
     const article: Article = {
       title,
-      subTitle,
+      subtitle,
       content,
       htmlContent: htmlArticleContent,
       media,
@@ -94,7 +94,7 @@ const ArticleView: React.FC = () => {
         return;
       }
       setTitle(draftArticle.title);
-      setSubTitle(draftArticle.subTitle);
+      setsubtitle(draftArticle.subtitle);
       setContent(draftArticle.content);
       setHtmlArticleContent(draftArticle.htmlContent);
       setMedia(draftArticle.media);
@@ -107,14 +107,14 @@ const ArticleView: React.FC = () => {
       if (article.title) {
         setTitle(article.title);
       }
-      if (article.subTitle) {
-        setSubTitle(article.subTitle);
+      if (article.subtitle) {
+        setsubtitle(article.subtitle);
       }
       if (article.content) {
-        setHtmlArticleContent(article.content);
+        setContent(article.content);
       }
       if (article.htmlContent) {
-        setContent(article.htmlContent);
+        setHtmlArticleContent(article.htmlContent);
       }
     }
   }, [article, isPending]);
@@ -171,7 +171,7 @@ const ArticleView: React.FC = () => {
             </div>
             <div className="max-w-full flex flex-col gap-4 items-left">
               <h1 className="text-5xl mx-20 font-semibold leading-tight mb-2">{title}</h1>
-              {subTitle && <h3 className="text-xl mx-20 mb-2">{subTitle}</h3>}
+              {subtitle && <h3 className="text-xl mx-20 mb-2">{subtitle}</h3>}
 
               <div id="article-content" className="w-full mb-20">
                 <TipTapRichTextEditor

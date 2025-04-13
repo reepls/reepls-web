@@ -1,12 +1,16 @@
+// import config from '../config';
+
+import config from '../config';
+
 const MAX_IMAGE_COUNT = 10;
 const MAX_VIDEO_COUNT = 4;
 
-const MAX_IMAGE_SIZE = 10 * 1024 * 1024; // 10MB
+const MAX_IMAGE_SIZE = 5 * 1024 * 1024; // 5MB
 const MAX_VIDEO_SIZE = 100 * 1024 * 1024; // 100MB
 
-const SHORT_POST_LENGTH = 1500;
+const SHORT_POST_LENGTH = 2500;
 
-const PREVIEW_SLUG = 'preview';
+const PREVIEW_SLUG = 'preview'; //'preview';
 
 const allowedImageTypes = ['jpeg', 'png', 'jpg', 'webp'];
 const allowedVideoTypes = [
@@ -40,9 +44,8 @@ const allowedVideoTypes = [
 ];
 
 // All about the api
-const API_BASE_URL =
-  import.meta.env.VITE_ENV === 'development' ? 'http://localhost:5001' : 'https://saah-server.vercel.app';
-const API_VERSION = import.meta.env.VITE_API_VERSION || '/api-v1';
+const API_BASE_URL = config.api.baseUrl;
+const API_VERSION = config.api.version || '/api-v1';
 const API_URL = `${API_BASE_URL}${API_VERSION}`;
 
 const AUTH_TOKEN_KEY = 'AuthToken';
@@ -66,5 +69,5 @@ export {
   PREVIEW_SLUG,
   REFRESH_TOKEN_KEY,
   SHORT_POST_LENGTH,
-  STORAGE_KEY
+  STORAGE_KEY,
 };

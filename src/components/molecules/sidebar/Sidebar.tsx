@@ -14,29 +14,43 @@ import {
 } from 'react-icons/lu';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
-import { reeplsIcon } from '../../../assets/icons';
+import { MAX_IMAGE_COUNT, MAX_VIDEO_COUNT } from '../../../constants';
 import { SidebarContext } from '../../../context/SidebarContext/SidebarContext';
 import PostModal from '../../../feature/Blog/components/PostModal';
 import { useCreateArticle } from '../../../feature/Blog/hooks/useArticleHook';
 import { useUser } from '../../../hooks/useUser';
-import { Article } from '../../../models/datamodels';
+import { Article, MediaItem, MediaType } from '../../../models/datamodels';
 import { cn } from '../../../utils';
 import { uploadPostImage, uploadPostVideo } from '../../../utils/media';
 import SidebarItem from '../../atoms/SidebarItem';
 import './sidebar.scss';
+import { useNotificationsValues } from '../../../feature/Notifications/hooks';
+import { commuLeft } from '../../../assets/icons';
 
 const Sidebar: React.FC = () => {
   const navigate = useNavigate();
-  const { authUser } = useUser();
+  const { authUser, isLoggedIn } = useUser();
   const [isCreatingPost, setIsCreatingPost] = useState<boolean>(false);
   const { t } = useTranslation();
   const { mutate: createPost, isPending } = useCreateArticle();
   const { isOpen, toggleSidebar } = useContext(SidebarContext);
 
+  const {notifications} = useNotificationsValues();
+  const unreadNotifications = notifications.filter(notif => !notif.is_read);
+   const screenWidth = window.innerWidth;
+
+  console.log('all Not',notifications)
+  console.log('uread Not',unreadNotifications)
+  const unreadCount = unreadNotifications.length;
+
   const handleToggleSidebar = () => {
     console.log('Toggle sidebar', isOpen);
     toggleSidebar();
   };
+
+  const handleGotoCommuniquePage = ()=>{
+    navigate('/posts/communiques')
+  }
 
   const navLinks = [
     {
@@ -52,34 +66,57 @@ const Sidebar: React.FC = () => {
     {
       icon: LuBookmark,
       name: 'Bookmarks',
-      link: '/bookmarks',
+      link: `${isLoggedIn ? '/bookmarks' : '/bookmarks/anonymous'}`,
     },
     {
       icon: LuBell,
       name: 'Notifications',
-      link: '/notifications',
-      badgeContent: 14,
+      link: `${isLoggedIn ? '/notifications' : '/notifications/anonymous'}`,
+      badgeContent: unreadCount,
     },
     {
       icon: FaRegUserCircle,
       name: 'Profile',
-      link: `/profile/${authUser?.username}`,
+      link: `${isLoggedIn ? `/profile/${authUser?.username}` : '/anonymous'}`,
     },
   ];
 
   const handlePost = async (postContent: string, postImages: File[], postVideos: File[]) => {
-    const images: string[] = [];
-    const videos: string[] = [];
+    if (!authUser?.id) {
+      toast.error('You must be logged in to create a post');
+      return;
+    }
+    if (postImages.length > MAX_IMAGE_COUNT) {
+      toast.error('You must upload at most ' + MAX_IMAGE_COUNT + ' images');
+      return;
+    }
+    if (postVideos.length > MAX_VIDEO_COUNT) {
+      toast.error('You must upload at most ' + MAX_VIDEO_COUNT + ' videos');
+      return;
+    }
+
+    const images: MediaItem[] = [];
+    const videos: MediaItem[] = [];
     for (const image of postImages) {
       if (authUser.id) {
-        const result = await uploadPostImage(authUser?.id, image);
-        images.push(result?.secure_url);
+        try {
+          const url = await uploadPostImage(authUser?.id, image);
+          images.push({ url, type: MediaType.Image });
+        } catch (error) {
+          toast.error('Your images could not be uploaded. Please try again later.');
+          return;
+        }
       }
     }
     for (const video of postVideos) {
       if (authUser.id) {
-        const result = await uploadPostVideo(authUser?.id, video);
-        videos.push(result?.secure_url);
+        try {
+          const url = await uploadPostVideo(authUser?.id, video);
+          videos.push({ url, type: MediaType.Video });
+        } catch (error) {
+          toast.error('Your videos could not be uploaded. Please try again later.');
+          return;
+        }
       }
     }
 
@@ -102,12 +139,15 @@ const Sidebar: React.FC = () => {
     });
   };
 
+  const isTabletSmall = screenWidth >= 640 && screenWidth < 930;
+
   return (
-    <div className="side">
+    <div className="side bg-background">
       <LuCircleChevronRight
         className={cn(
-          'size-6 p-0 rounded-full cursor-pointer',
+          'size-7 md:size-6 p-0 rounded-full cursor-pointer',
           isOpen && 'rotate-180',
+          isTabletSmall && 'hidden',
           'transition-all duration-300 ease-in-out',
           'hover:text-primary-400',
           'bg-background border-none absolute z-10 top-1/2 right-0 transform translate-x-1/2 text-neutral-400'
@@ -118,7 +158,7 @@ const Sidebar: React.FC = () => {
         <div
           className="text-roboto text-[24px] font-semibold flex gap-2 items-center cursor-pointer"
           onClick={() => navigate('/feed')}>
-          <img src={reeplsIcon} alt="reeplsicon" className={`${isOpen ? 'size-8' : 'size-9'}`} />
+          <img src={`/Logo.svg`} alt="reeplsicon" className={`${isOpen ? 'size-8' : 'size-9'}`} />
           {isOpen && 'REEPLS'}
         </div>
       </div>
@@ -178,6 +218,17 @@ const Sidebar: React.FC = () => {
           </PopoverPanel>
         </Popover>
       </div>
+
+      <div className='md:hidden' onClick={handleGotoCommuniquePage}>
+      <div className="p-4 ">
+      <div className='flex gap-2'>
+        <img src={commuLeft} alt="star" />
+        {/* <LuStar className="size-6 bg-main-yellow rounded-full p-1" strokeWidth={2.5} /> */}
+      {isOpen &&  <div className='line-clamp-1'>{t(`Communiques`)}</div>}
+      </div>
+    </div>
+      </div>
+      
     </div>
   );
 };

@@ -32,12 +32,12 @@ const Followers: React.FC = () => {
   }, [followersData, followingsData]);
 
   return (
-    <div className={`grid grid-cols-[4fr_1.66fr] `}>
-      <div className="profile border-r-[1px] min-h-screen border-neutral-500 ">
+    <div className={`lg:grid grid-cols-[4fr_1.66fr] `}>
+      <div className="profile lg:border-r-[1px] min-h-screen border-neutral-500 ">
         <Topbar>
           <p>{t(`Profile`)}</p>
         </Topbar>
-        <div className="px-20">
+        <div className="sm:px-5 md:px-10 lg:px-20 ">
           <div className="mt-6 flex justify-center">
             <div className="w-[200px] justify-center">
               <Tabs
@@ -57,7 +57,7 @@ const Followers: React.FC = () => {
                   followings.map((following: Follow) => (
                     <AuthorComponent
                       key={following?.followed_id?.id}
-                      user={following.followed_id} 
+                      username={following?.followed_id?.username || ''} 
                     />
                   ))
                 ) : (
@@ -73,7 +73,7 @@ const Followers: React.FC = () => {
                   followers.map((follower: Follow) => (
                     <AuthorComponent
                       key={follower?.follower_id?.id}
-                      user={follower.follower_id} 
+                      username={follower?.follower_id?.username || ''} 
                     />
                   ))
                 ) : (
@@ -87,7 +87,7 @@ const Followers: React.FC = () => {
         </div>
       </div>
       {/* Configurations Section */}
-      <div className="profile__configurationz hidden lg:block">
+      <div className="profile__configurationz bg-background hidden lg:block">
         <ProfileConfigurations />
       </div>
     </div>

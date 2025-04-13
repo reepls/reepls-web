@@ -5,19 +5,15 @@ import BlogPost from '../Blog/components/BlogPost';
 import BlogSkeletonComponent from '../Blog/components/BlogSkeleton'; // Added for better loading UI
 import { useGetCommuniquerArticles } from '../Blog/hooks/useArticleHook';
 import Communique from './components/Communique/Communique';
+import { commuLeft } from '../../assets/icons';
+import { useTranslation } from 'react-i18next';
 
 const CommuniqueList: React.FC = () => {
   const bottomRef = useRef<HTMLDivElement>(null); // Ref for the bottom
+  const {t}= useTranslation()
 
   // Fetch communiqué articles with infinite scrolling
-  const { 
-    data, 
-    error, 
-    isLoading, 
-    fetchNextPage, 
-    hasNextPage, 
-    isFetchingNextPage 
-  } = useGetCommuniquerArticles();
+  const { data, error, isLoading, fetchNextPage, hasNextPage, isFetchingNextPage } = useGetCommuniquerArticles();
 
   // Infinite scrolling logic
   useEffect(() => {
@@ -51,8 +47,12 @@ const CommuniqueList: React.FC = () => {
       {/* Feed Posts Section */}
       <div className="Feed__Posts min-h-screen lg:border-r-[1px] border-neutral-500">
         <Topbar>
-          <div className="px-3">
-            <div>Communiques</div>
+          <div className="">
+          <div className='flex gap-2'>
+        <img className=' md:hidden' src={commuLeft} alt="star" />
+        {/* <LuStar className="size-6 bg-main-yellow rounded-full p-1" strokeWidth={2.5} /> */}
+      <div className='line-clamp-1'>{t(`Communiques`)}</div>
+      </div>
           </div>
         </Topbar>
 
@@ -67,16 +67,7 @@ const CommuniqueList: React.FC = () => {
             {data?.pages.map((page, i) => (
               <div className="flex flex-col" key={i}>
                 {page.articles.map((article: Article) => (
-                  <BlogPost
-                    key={article._id}
-                    isArticle={article.isArticle!}
-                    media={article.media!}
-                    title={article.title!}
-                    content={article.content!}
-                    user={article.author_id!}
-                    date={article.createdAt!}
-                    article_id={article._id!}
-                  />
+                  <BlogPost key={article._id} article={article} />
                 ))}
               </div>
             ))}
@@ -98,7 +89,7 @@ const CommuniqueList: React.FC = () => {
       </div>
 
       {/* Communique Section */}
-      <div className="communique hidden lg:block">
+      <div className="communique bg-background hidden lg:block">
         <Communique />
       </div>
     </div>

@@ -9,12 +9,12 @@
   "GetInformed": "Restez informé!",
   "EnterEmailDescription": "Entrez votre email pour créer un compte. Notez que s'inscrire avec un email offre plus de personnalisation et d'autres avantages.",
   "EmailLabel": "Email",
-  "EmailPlaceholder": "Fcbarcelona@gmail.com",
+  "EmailPlaceholder": "mongobeti@gmail.com",
   "PasswordLabel": "Mot de passe",
   "PhonePlaceholder": "678566385",
   "PhoneNumberPlaceholder": "678566385",
   "PhoneNumberLabel": "Numéro de téléphone",
-  "PhoneErrorMessage": "Numéro de téléphone invalide : doit contenir uniquement des chiffres et 9 caractères",
+  "PhoneErrorMessage": "Le numéro doit commencer par '+' et contenir 8-15 chiffres",
   "PasswordPlaceholder": "dfwni8y5*inikfmn",
   "PasswordErrorMessage": "Invalide : le mot de passe doit contenir un chiffre et un caractère spécial d'au moins 8 caractères",
   "NameLabel": "Nom",
@@ -103,6 +103,8 @@
   "Close Account": "Fermer le compte",
   "Light": "Clair",
   "Dark": "Sombre",
+  "English": "Englais",
+  "French": "Francais",
   "On": "Activé",
   "Off": "Désactivé",
   "Theme": "Thème",
@@ -118,5 +120,48 @@
   "Publish": "Publier",
   "Add thumbnail image": "Ajouter une image miniature",
   "Press '/' for commands": "Appuyez sur '/' pour les commandes",
-  "New Article": "Nouvel Article"
+  "New Article": "Nouvel Article",
+  "Drop your thoughts and let them": "Exprimez vos pensées et laissez-les",
+  "header": {
+    "signIn": "Se connecter",
+    "signUp": "S'inscrire"
+  },
+  "Explore, write, and share insightful stories and heartfelt reflections. Stay informed, engaged, and part of a thoughtful community.": "Explorez, écrivez et partagez des histoires perspicaces et des réflexions sincères. Restez informé, engagé et faites partie d'une communauté réfléchie.",
+  "Start a Reepl": "Commencer un Reepl",
+  "Explore Stories": "Explorer les histoires",
+  "sections": {
+    "section1": {
+      "title": "Lisez ce qui compte pour vous parmi des travaux culturels divers, inspirez avec les vôtres",
+      "description": "Participez à des écrits issus d'expériences variées, restez informé des derniers événements et partagez vos propres réflexions.",
+      "linkText": "Commencer à lire des articles"
+    },
+    "section2": {
+      "title": "Trouvez vos sujets préférés",
+      "description": "Suivez les sujets qui vous importent, personnalisez votre flux et plongez dans des histoires qui correspondent à vos passions et curiosités.",
+      "linkText": "Commencer à lire vos sujets"
+    },
+    "section3": {
+      "title": "communiqué",
+      "description": "Vous vous souciez des alertes nationales ? Soyez le premier à les recevoir. Restez informé avec des notifications et des mises à jour en temps réel de sources fiables.",
+      "linkText": "Trouver les communiqués récents"
+    }
+  },
+  "footer": {
+    "top": {
+      "title": "Faites partie d'un réseau d'informés—faites entendre votre voix sur Reepls",
+      "button": "Commencer un Reepl"
+    },
+    "bottom": {
+      "help": "Aide",
+      "terms": "Conditions d'utilisation",
+      "policy": "Politique de confidentialité"
+    }
+  }, 
+  "GenericErrorMessage": "Une erreur s'est produite. Veuillez réessayer.",
+  "NetworkErrorMessage": "Oups ! Il semble que vous soyez hors ligne. Vérifiez votre connexion et réessayez.",
+  "AuthErrorMessage": "Numéro de téléphone ou mot de passe incorrect. Veuillez réessayer.",
+  "NotFoundErrorMessage": "Nous n'avons pas trouvé de compte avec ce numéro de téléphone.",
+  "ServerErrorMessage": "Nos serveurs rencontrent un problème. Veuillez réessayer ultérieurement !",
+  "RateLimitErrorMessage": "Trop de tentatives de connexion ! Veuillez patienter un moment avant de réessayer.",
+  "UnexpectedErrorMessage": "Un problème inattendu est survenu lors de la connexion. Veuillez réessayer."
 }

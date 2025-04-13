@@ -9,12 +9,12 @@
   "GetInformed": "Get on the informed side!",
   "EnterEmailDescription": "Enter your email to create an account. Note that signing up with email offers you more personalization and other benefits.",
   "EmailLabel": "Email",
-  "EmailPlaceholder": "Fcbarcelona@gmail.com",
+  "EmailPlaceholder": "mongobeti@gmail.com",
   "PasswordLabel": "Password",
   "PhonePlaceholder": "678566385",
   "PhoneNumberPlaceholder": "678566385",
   "PhoneNumberLabel": "Phone number",
-  "PhoneErrorMessage": "Invalid phone number",
+  "PhoneErrorMessage": "Phone number must start with '+' and contain 8-15 digits",
   "PasswordPlaceholder": "dfwni8y5*inikfmn",
   "PasswordErrorMessage": "Invalid: password must contain a number and a special character of at least 8 characters",
   "NameLabel": "Username",
@@ -103,6 +103,8 @@
   "Close Account": "Close Account",
   "Light": "Light",
   "Dark": "Dark",
+  "English": "English",
+  "French": "French",
   "On": "On",
   "Off": "Off",
   "Theme": "Theme",
@@ -118,5 +120,50 @@
   "Publish": "Publish",
   "Add thumbnail image": "Add thumbnail image",
   "Press '/' for commands": "Press '/' for commands",
-  "New Article": "New Article"
+  "New Article": "New Article",
+  "Drop your thoughts and let them": "Drop your thoughts and let them",
+  "header": {
+    "signIn": "Sign In",
+    "signUp": "Sign Up"
+  },
+  "Explore, write, and share insightful stories and heartfelt reflections. Stay informed, engaged, and part of a thoughtful community.": "Explore, write, and share insightful stories and heartfelt reflections. Stay informed, engaged, and part of a thoughtful community.",
+  "Start a Reepl": "Start a Reepl",
+  "Explore Stories": "Explore Stories",
+  "sections": {
+    "section1": {
+      "title": "Read what matters to you from diverse cultural work, inspire with yours",
+      "description": "Engage with writings from diverse experiences, stay informed with the latest happenings, and share your own thoughts.",
+      "linkText": "Start reading articles"
+    },
+    "section2": {
+      "title": "Find your favorite topics ",
+      "description": "Follow topics that matter to you, customize your feed, and dive into stories that align with your passions and curiosities.",
+      "linkText": "Start reading your topics"
+    },
+    "section3": {
+      "title": "Communiques",
+      "description": "Care about national alerts? Be the first to get them. Stay informed with real-time notices and updates from trusted sources.",
+      "linkText": "Find recent communiques"
+    }
+  },
+
+  "footer": {
+    "top": {
+      "title": "Become part of a network of the informed—have your voice heard on ",
+      "button": "Start a Reepl"
+    },
+    "bottom": {
+      "help": "Help",
+      "terms": "Terms of Service",
+      "policy": "Privacy Policy"
+    }
+  },
+
+  "GenericErrorMessage": "Something went wrong. Please try again.",
+  "NetworkErrorMessage": "Oops! Looks like you’re offline. Check your connection and try again.",
+  "AuthErrorMessage": "Incorrect phone number or password. Please try again.",
+  "NotFoundErrorMessage": "We couldn’t find an account with that phone number.",
+  "ServerErrorMessage": "Our servers are having a moment. Please try again soon!",
+  "RateLimitErrorMessage": "Too many login attempts! Please wait a bit and try again.",
+  "UnexpectedErrorMessage": "Something unexpected happened during login. Please try again."
 }

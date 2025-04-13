@@ -1,5 +1,6 @@
 import 'katex/dist/katex.min.css';
 import { useCallback } from 'react';
+import { toast } from 'react-toastify';
 import RichTextEditor, {
   Attachment,
   BaseKit,
@@ -51,10 +52,12 @@ import RichTextEditor, {
 } from 'reactjs-tiptap-editor';
 import 'reactjs-tiptap-editor/style.css';
 import useTheme from '../../../hooks/useTheme';
+import { useUser } from '../../../hooks/useUser';
+import { MediaType } from '../../../models/datamodels';
 import '../../../styles/shadcn.scss';
 import { convertBase64ToBlob, debounce } from '../../../utils';
+import { uploadArticleImage, uploadArticleVideo } from '../../../utils/media';
 import '../styles/editor.scss';
-
 // Type for editor content (assuming HTML string output)
 type EditorContent = string;
 
@@ -62,21 +65,25 @@ function TipTapRichTextEditor({
   initialContent = '',
   handleContentChange,
   handleHtmlContentChange,
+  handleMediaUpload,
   editorRef,
   disabled = false,
   hideToolbar = false,
   hideBubble = false,
   className = '',
 }: {
+  userId?: string;
   initialContent: EditorContent;
-  handleContentChange: (content: EditorContent) => void;
-  handleHtmlContentChange: (content: EditorContent) => void;
+  handleContentChange?: (content: EditorContent) => void;
+  handleHtmlContentChange?: (content: EditorContent) => void;
+  handleMediaUpload?: (url: string, type: MediaType) => void;
   editorRef: React.RefObject<{ editor: Editor | null }>; // Update to match the correct type
   disabled?: boolean;
   hideToolbar?: boolean;
   hideBubble?: boolean;
   className?: string;
 }) {
+  const { authUser } = useUser();
   const extensions = [
     BaseKit.configure({
       placeholder: {
@@ -114,23 +121,35 @@ function TipTapRichTextEditor({
     }),
     Link,
     Image.configure({
-      upload: (file: File): Promise<string> => {
-        return new Promise((resolve) => {
-          setTimeout(() => {
-            resolve(URL.createObjectURL(file));
-            alert('image uploaded');
-          }, 500);
-        });
+      upload: async (file: File): Promise<string> => {
+        if (!authUser?.id) {
+          toast.error('You must be logged in to upload images');
+          return Promise.reject(new Error('User ID is required'));
+        }
+        try {
+          const url = await uploadArticleImage(authUser?.id, file);
+          handleMediaUpload?.(url, MediaType.Image);
+          return Promise.resolve(url);
+        } catch (error) {
+          toast.error('Failed to upload image');
+          return Promise.reject(error);
+        }
       },
     }),
     Video.configure({
-      upload: (file: File): Promise<string> => {
-        return new Promise((resolve) => {
-          setTimeout(() => {
-            resolve(URL.createObjectURL(file));
-            alert('video uploaded');
-          }, 500);
-        });
+      upload: async (file: File): Promise<string> => {
+        if (!authUser?.id) {
+          toast.error('You must be logged in to upload videos');
+          return Promise.reject(new Error('User ID is required'));
+        }
+        try {
+          const url = await uploadArticleVideo(authUser?.id, file);
+          handleMediaUpload?.(url, MediaType.Video);
+          return Promise.resolve(url);
+        } catch (error) {
+          toast.error('Failed to upload video');
+          return Promise.reject(error);
+        }
       },
     }),
     ImageGif.configure({
@@ -148,12 +167,18 @@ function TipTapRichTextEditor({
     Iframe,
     ExportPdf.configure({ spacer: true }),
     ImportWord.configure({
-      upload: (files: File[]): Promise<{ src: string; alt: string }[]> => {
-        const f = files.map((file) => ({
-          src: URL.createObjectURL(file),
-          alt: file.name,
-        }));
-        return Promise.resolve(f);
+      upload: async (): Promise<{ src: string; alt: string }[]> => {
+        toast.error('We do not support uploading documents yet!');
+        throw new Error('Not implemented');
+        // if (!authUser?.id) {
+        //   toast.error('You must be logged in to upload documents');
+        //   return Promise.reject(new Error('User ID is required'));
+        // }
+        // const f = files.map((file) => ({
+        //   src: URL.createObjectURL(file),
+        //   alt: file.name,
+        // }));
+        // return Promise.resolve(f);
       },
     }),
     ExportWord,
@@ -195,8 +220,8 @@ function TipTapRichTextEditor({
     // @ts-ignore
     debounce((value: EditorContent) => {
       // handleContentChange(value);
-      handleContentChange(editorRef.current?.editor?.getText() ?? '');
-      handleHtmlContentChange(editorRef.current?.editor?.getHTML() ?? '');
+      handleContentChange?.(editorRef.current?.editor?.getText() ?? '');
+      handleHtmlContentChange?.(editorRef.current?.editor?.getHTML() ?? '');
     }, 1000),
     []
   );

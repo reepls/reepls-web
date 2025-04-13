@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { heart, sadface, smile, thumb, clap } from "../../../assets/icons";
 import {
-  useCreateReaction,
+
   useGetArticleReactions,
   useUpdateReaction,
 } from "../hooks";
@@ -9,6 +9,7 @@ import { useUser } from "../../../hooks/useUser";
 import { motion } from "framer-motion";
 import { toast } from "react-toastify"; // Import toast (adjust if using a different library)
 import {ReactionReceived } from "../../../models/datamodels";
+import { useSendReactionNotification } from "../../Notifications/hooks/useNotification";
 
 interface ReactionModalProps {
   isOpen: boolean;
@@ -28,7 +29,8 @@ const ReactionModal: React.FC<ReactionModalProps> = ({
   const [pendingReaction, setPendingReaction] = useState<string | null>(null);
   const [successReaction, setSuccessReaction] = useState<string | null>(null);
   const { authUser } = useUser();
-  const { mutate: createReaction } = useCreateReaction();
+  // const { mutate: createReaction } = useCreateReaction();
+  const { mutate: createReaction } = useSendReactionNotification();
   const { mutate: updateReaction } = useUpdateReaction();
   const { data: allReactions } = useGetArticleReactions(article_id);
 
@@ -41,7 +43,7 @@ const ReactionModal: React.FC<ReactionModalProps> = ({
     // Extract user_ids from allReactions and store in userIds array
     if (allReactions?.reactions && Array.isArray(allReactions?.reactions)) {
       const extractedUserIds = allReactions?.reactions.map((reaction:ReactionReceived
-      ) => reaction.user_id.id);
+      ) => reaction.user_id?.id);
       setUserIds(extractedUserIds);
     }
 
@@ -61,7 +63,7 @@ const ReactionModal: React.FC<ReactionModalProps> = ({
 
   const handleReaction = (reaction: string) => {
     // Check if authUser.id exists in userIds
-    const userHasReacted = authUser?.id && userIds.includes(authUser.id);
+    const userHasReacted = authUser?.id && userIds.includes(authUser?.id);
     console.log('userhasreacted',userHasReacted)
 
     if (userHasReacted) {
@@ -97,12 +99,14 @@ const ReactionModal: React.FC<ReactionModalProps> = ({
               setTimeout(() => setSuccessReaction(null), 1000);
               toast.success("Reaction updated successfully");
               console.log("Reaction updated successfully");
+              onClose()
             },
             onError: () => {
               setIsPending(false);
               setPendingReaction(null);
               toast.error("Failed to update reaction");
               console.log("Failed to update reaction");
+              onClose()
             },
           }
         );
@@ -112,7 +116,7 @@ const ReactionModal: React.FC<ReactionModalProps> = ({
       setIsPending(true);
       setPendingReaction(reaction);
       createReaction(
-        { type: reaction, article_id, user_id: authUser?.id || "" },
+        { type: reaction, article_id },
         {
           onSuccess: () => {
             setIsPending(false);
@@ -121,12 +125,14 @@ const ReactionModal: React.FC<ReactionModalProps> = ({
             setTimeout(() => setSuccessReaction(null), 1000);
             toast.success("Reaction created successfully");
             console.log("Reaction created successfully");
+            onClose()
           },
           onError: () => {
             setIsPending(false);
             setPendingReaction(null);
             toast.error("Failed to create reaction");
             console.log("Failed to create reaction");
+            onClose()
           },
         }
       );

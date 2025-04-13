@@ -1,5 +1,5 @@
-import { Brain } from 'lucide-react';
 import React, { useContext, useEffect, useRef, useState } from 'react';
+import CognitiveModeIndicator from '../../components/atoms/CognitiveModeIndicator';
 import Topbar from '../../components/atoms/Topbar/Topbar';
 import { CognitiveModeContext } from '../../context/CognitiveMode/CognitiveModeContext';
 import { Article } from '../../models/datamodels';
@@ -16,14 +16,7 @@ const FeedFollowing: React.FC = () => {
   const bottomRef = useRef<HTMLDivElement>(null); // Ref for the bottom
 
   // Fetch followed articles with infinite scrolling
-  const { 
-    data, 
-    error, 
-    isLoading, 
-    fetchNextPage, 
-    hasNextPage, 
-    isFetchingNextPage 
-  } = useGetFollowedArticles();
+  const { data, error, isLoading, fetchNextPage, hasNextPage, isFetchingNextPage } = useGetFollowedArticles();
 
   // Handle cognitive mode toggle
   const handleBrainClick = () => {
@@ -31,7 +24,7 @@ const FeedFollowing: React.FC = () => {
     toggleCognitiveMode();
   };
 
-  // Infinite scrolling logic
+  // Auto-fetch next page when scrolling to the bottom
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
@@ -41,19 +34,19 @@ const FeedFollowing: React.FC = () => {
         }
       },
       {
-        root: null, // Use viewport
-        rootMargin: '100px', // Trigger 100px before bottom
-        threshold: 0.5, // Trigger when 50% of bottomRef is visible
+        root: null,
+        rootMargin: '800px',
+        threshold: 0.5,
       }
     );
 
     if (bottomRef.current) {
-      observer.observe(bottomRef.current);
+      observer.observe(bottomRef.current); // Fixed to bottomRef.current below
     }
 
     return () => {
       if (bottomRef.current) {
-        observer.unobserve(bottomRef.current);
+        observer.unobserve(bottomRef.current); // Fixed to bottomRef.current below
       }
     };
   }, [fetchNextPage, hasNextPage, isFetchingNextPage]);
@@ -62,21 +55,38 @@ const FeedFollowing: React.FC = () => {
     if (data) console.log('followed data', data);
   }, [data]);
 
+  // Function to get friendly error messages
+  const getFriendlyErrorMessage = (error: any): string => {
+    if (!error) return "Something went wrong. Please try again later.";
+
+    // Handle common error cases
+    if (error.message.includes("Network Error")) {
+      return "Oops! It looks like you're offline. Please check your internet connection and try again.";
+    }
+    if (error.response) {
+      const status = error.response.status;
+      if (status === 404) {
+        return "No posts from the people you follow just yet. Check back later!";
+      }
+      if (status === 500) {
+        return "Our servers are taking a quick nap. Please try again soon!";
+      }
+      if (status === 429) {
+        return "Slow down a bit! Too many requests—give it a moment and try again.";
+      }
+    }
+
+    // Default fallback for unhandled errors
+    return "Something unexpected popped up. We’re on it—please try again later!";
+  };
+
   return (
     <div className={`lg:grid grid-cols-[4fr_1.65fr]`}>
       <div className="Feed__Posts min-h-screen lg:border-r-[1px] border-neutral-500">
         <Topbar>
-          <div className="px-3 flex justify-between items-center">
+          <div className="px-3 flex justify-between items-center w-full">
             <ToggleFeed />
-            <Brain
-              size={isBrainActive ? 35 : 30}
-              onClick={handleBrainClick}
-              className={`cursor-pointer transition-all ${
-                isBrainActive
-                  ? 'text-green-600 bg-green-100 rounded-full p-1'
-                  : 'text-neutral-50 hover:text-green-600 hover:bg-green-100 hover:rounded-full hover:p-1 transition-all'
-              }`}
-            />
+            <CognitiveModeIndicator isActive={isBrainActive} onClick={handleBrainClick} />
           </div>
         </Topbar>
 
@@ -91,16 +101,7 @@ const FeedFollowing: React.FC = () => {
             {data?.pages.map((page, i) => (
               <div className="flex flex-col" key={i}>
                 {page.articles.map((article: Article) => (
-                  <BlogPost
-                    key={article._id}
-                    isArticle={article.isArticle!}
-                    media={article.media!}
-                    title={article.title!}
-                    content={article.content!}
-                    date={article.createdAt!}
-                    article_id={article._id!}
-                    user={article.author_id!}
-                  />
+                  <BlogPost key={article._id} article={article} />
                 ))}
               </div>
             ))}
@@ -118,10 +119,15 @@ const FeedFollowing: React.FC = () => {
         {/* Bottom trigger for infinite scroll */}
         <div ref={bottomRef} style={{ height: '100px' }} />
 
-        {error && <div>Error: {error.message}</div>}
+        {/* Friendly error display */}
+        {error && (
+          <div className="px-1 sm:px-8 w-[98%] sm:w-[90%] text-neutral-50 text-center py-4">
+            {getFriendlyErrorMessage(error)}
+          </div>
+        )}
       </div>
 
-      <div className="communique hidden lg:block">
+      <div className="communique bg-background hidden lg:block">
         <Communique />
       </div>
     </div>

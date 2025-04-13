@@ -1,40 +1,74 @@
-import { useTranslation } from 'react-i18next';
-import { useNavigate } from 'react-router-dom';
-import useTheme from '../../../hooks/useTheme';
-import '../styles/home.scss';
-import { useUser } from '../../../hooks/useUser';
+import "../styles/home.scss";
+import Header from "../components/header/Header";
+import Banner from "../components/Banner/Banner";
+import Sections from "../components/Sections/Sections";
+import FooterTop from "../components/Footer/FooterTop";
+import FooterBottom from "../components/Footer/FooterBottom";
+
+import { useUser } from "../../../hooks/useUser";
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import SplashComponent from "../../../components/molecules/SplashScreen/SplashComponent";
 
 function Home() {
-  const { t, i18n } = useTranslation();
-  const { theme, toggleTheme } = useTheme();
+  const { isLoggedIn } = useUser();
   const navigate = useNavigate();
-  const { authUser} = useUser();
+  const [showSplash, setShowSplash] = useState(false);
+  const [splashText, setSplashText] = useState<string | undefined>(undefined);
 
-  const handleClick = () => {
-    console.log('Current authState:', authUser);
+  useEffect(() => {
+    // Check if user is logged in on mount
+    if (isLoggedIn) {
+      setShowSplash(true); 
 
+      // Wait 5 seconds, then check internet
+      const splashTimer = setTimeout(() => {
+        checkInternetConnection();
+      }, 3000);
 
-    if (authUser?.id) {
-      console.log('Navigating to feed');
-      navigate('/feed');
+      // Cleanup timeout on unmount
+      return () => clearTimeout(splashTimer);
+    }
+  }, [isLoggedIn,setShowSplash]);
+
+  const checkInternetConnection = () => {
+    if (navigator.onLine) {
+      // Internet is good, navigate to /feed
+      navigate("/feed");
     } else {
-      console.log('Navigating to auth');
-      navigate('/auth');
+      // Internet is bad, update splash text and keep showing splash
+      setSplashText("Internet connection not good. Please check your network.");
     }
   };
 
-  return (
-    <div className="home__container">
-      <h1>{t('Welcome to REEPLS')}</h1>
-      <div className="language__translators">
-        <button onClick={() => i18n.changeLanguage('fr')}>French</button>
-        <button onClick={() => i18n.changeLanguage('en')}>English</button>
-      </div>
-      <div className={`togglebtn ${theme === 'dark' ? 'flex' : ''}`} onClick={() => toggleTheme()}>
-        <div className="togglebtn__mover"></div>
-      </div>
+  //Continuously check internet if it's bad
+  useEffect(() => {
+    if (splashText && !navigator.onLine) {
+      const interval = setInterval(() => {
+        if (navigator.onLine) {
+          navigate("/feed"); // Navigate when internet is back
+        }
+      }, 2000); // Check every 2 seconds
 
-      <h2 onClick={handleClick}>{t('Get Started')}</h2>
+      return () => clearInterval(interval);
+    }
+  }, [splashText, navigate]);
+
+  if (showSplash) {
+    return <SplashComponent text={splashText} />;
+  }
+
+  return (
+    <div className="home__container bg-background">
+      <Header />
+      <div className="lg:px-[100px] max-w-screen-2xl mx-auto">
+        <Banner />
+        <Sections />
+      </div>
+      <FooterTop />
+      <div className="lg:px-[100px] max-w-screen-2xl mx-auto">
+        <FooterBottom />
+      </div>
     </div>
   );
 }
