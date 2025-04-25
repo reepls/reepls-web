@@ -124,7 +124,7 @@ const ProfileConfigurations: React.FC = () => {
             className="cursor-pointer w-full"
             onClick={handleProfileSettingsClick}
           >
-            {t(`Profile Settings`)}
+            {t(`profile.profileSettings`)}
           </div>
         </ConfigurationWrapper>
         <ConfigurationWrapper>
@@ -149,7 +149,7 @@ const ProfileConfigurations: React.FC = () => {
               onClick={() => setShowLanguageMenu(!showLanguageMenu)}
             >
               {languages.find((lang) => lang.code === i18n.language)?.label ||
-                "English"}
+                t("English")}
               <svg
                 className={`w-4 h-4 transition-transform ${
                   showLanguageMenu ? "rotate-180" : ""
@@ -191,7 +191,7 @@ const ProfileConfigurations: React.FC = () => {
         </ConfigurationWrapper>
 
         <ConfigurationWrapper>
-          <div>{t(`Voice Language`)}</div>
+          <div>{t(`profile.voiceLanguage`)}</div>
           <div className="relative">
             <select
               className="bg-neutral-800 text-neutral-50 p-2 rounded-md outline-none"
@@ -211,7 +211,7 @@ const ProfileConfigurations: React.FC = () => {
         </ConfigurationWrapper>
 
         <ConfigurationWrapper>
-          <div>{t(`Explicit Content`)}</div>
+          <div>{t(`profile.explicitContent`)}</div>
           <div className="flex gap-2 items-center">
             {t(isExplicitContent ? "On" : "Off")}
             <div
@@ -230,7 +230,7 @@ const ProfileConfigurations: React.FC = () => {
         </ConfigurationWrapper>
 
         <ConfigurationWrapper>
-          <div>{t(`Video Auto Play`)}</div>
+          <div>{t(`profile.videoAutoPlay`)}</div>
           <div className="flex gap-2 items-center">
             {t(isVideoAutoPlay ? "On" : "Off")}
             <div
@@ -269,13 +269,13 @@ const ProfileConfigurations: React.FC = () => {
 
         <ConfigurationWrapper>
           <div className="cursor-pointer w-full" onClick={handleTermsClick}>
-            {t(`Terms and Policies`)}
+            {t(`profile.TermsandPolicies`)}
           </div>
         </ConfigurationWrapper>
 
         <ConfigurationWrapper>
           <div className="cursor-pointer w-full" onClick={handleLogoutClick}>
-            {t(`Logout`)}
+            {t(`profile.logout`)}
           </div>
         </ConfigurationWrapper>
       </div>

@@ -8,21 +8,24 @@ import {
 import { useUser } from "../../../hooks/useUser";
 import { motion } from "framer-motion";
 import { toast } from "react-toastify"; // Import toast (adjust if using a different library)
-import {ReactionReceived } from "../../../models/datamodels";
+import {Article, ReactionReceived } from "../../../models/datamodels";
 import { useSendReactionNotification } from "../../Notifications/hooks/useNotification";
+import { useTranslation } from "react-i18next";
+import { useUpdateArticle } from "../../Blog/hooks/useArticleHook";
 
 interface ReactionModalProps {
   isOpen: boolean;
   onClose: () => void;
   onReact: (reaction: string) => void;
   article_id: string;
+  article:Article
 }
 
 const ReactionModal: React.FC<ReactionModalProps> = ({
   isOpen,
   onClose,
   onReact,
-  article_id,
+  article_id,article
 }) => {
   const [isVisible, setIsVisible] = useState(false);
   const [isPending, setIsPending] = useState(false);
@@ -33,6 +36,8 @@ const ReactionModal: React.FC<ReactionModalProps> = ({
   const { mutate: createReaction } = useSendReactionNotification();
   const { mutate: updateReaction } = useUpdateReaction();
   const { data: allReactions } = useGetArticleReactions(article_id);
+    const { mutate } = useUpdateArticle();
+  const {t} = useTranslation()
 
   // State to store the array of user IDs
   const [userIds, setUserIds] = useState<string[]>([]);
@@ -97,14 +102,14 @@ const ReactionModal: React.FC<ReactionModalProps> = ({
               setPendingReaction(null);
               setSuccessReaction(reaction);
               setTimeout(() => setSuccessReaction(null), 1000);
-              toast.success("Reaction updated successfully");
+              toast.success(t("interaction.alerts.reactionUpdateSuccess"))
               console.log("Reaction updated successfully");
               onClose()
             },
             onError: () => {
               setIsPending(false);
               setPendingReaction(null);
-              toast.error("Failed to update reaction");
+              toast.error(t("interaction.alerts.reactionUpdateFailed"));
               console.log("Failed to update reaction");
               onClose()
             },
@@ -123,14 +128,20 @@ const ReactionModal: React.FC<ReactionModalProps> = ({
             setPendingReaction(null);
             setSuccessReaction(reaction);
             setTimeout(() => setSuccessReaction(null), 1000);
-            toast.success("Reaction created successfully");
+            toast.success(t("interaction.alerts.reactionCreatedSuccess"));
             console.log("Reaction created successfully");
             onClose()
+              mutate({
+          articleId: article._id || '',
+          article: {
+            engagement_ount: article.engagement_ount! + 1, 
+          },
+        });
           },
           onError: () => {
             setIsPending(false);
             setPendingReaction(null);
-            toast.error("Failed to create reaction");
+            toast.error(t("interaction.alerts.reactionCreatedFailed"));
             console.log("Failed to create reaction");
             onClose()
           },
@@ -178,7 +189,7 @@ const ReactionModal: React.FC<ReactionModalProps> = ({
       ></div>
 
       <div
-        className={`absolute z-50 mt-2 bg-background shadow-lg rounded-full p-3 transition-opacity duration-400 ${
+        className={`absolute z-50 mt-2 bg-background shadow-sm rounded-full p-3 transition-opacity duration-400 ${
           isOpen ? "opacity-100" : "opacity-0"
         }`}
         style={{ bottom: "40px", left: "0px" }}

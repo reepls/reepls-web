@@ -14,7 +14,8 @@ import {
 import useTheme from '../../../hooks/useTheme';
 import { cn } from '../../../utils';
 import { useUser } from '../../../hooks/useUser';
-import SignInPopUp from '../../AnonymousUser/components/SignInPopUp'; // Assuming this is the correct path
+import SignInPopUp from '../../AnonymousUser/components/SignInPopUp';
+import StarToggle from '../../../components/atoms/CommuniqueBtn';
 
 const PostModal = ({
   isModalOpen,
@@ -24,17 +25,18 @@ const PostModal = ({
 }: {
   isModalOpen: boolean;
   setIsModalOpen: (value: boolean) => void;
-  handlePost: (postContent: string, postImages: File[], postVideos: File[]) => void;
+  handlePost: (postContent: string, postImages: File[], postVideos: File[], isCommunique: boolean) => void;
   isPending: boolean;
 }) => {
   const [postContent, setPostContent] = useState<string>('');
   const [postImages, setPostImages] = useState<File[]>([]);
   const [postVideos, setPostVideos] = useState<File[]>([]);
+  const [isCommunique, setIsCommunique] = useState<boolean>(false);
   const [isEmojiPickerOpen, setIsEmojiPickerOpen] = useState<boolean>(false);
   const [showSignInPopup, setShowSignInPopup] = useState<string | null>(null); // Store action type for popup
   const { theme } = useTheme();
   const { t } = useTranslation();
-  const { isLoggedIn } = useUser();
+  const { isLoggedIn,authUser } = useUser();
 
   const handleActionBlocked = (action: string) => {
     if (!isLoggedIn) {
@@ -80,7 +82,7 @@ const PostModal = ({
 
   const handlePostClick = () => {
     if (handleActionBlocked('post')) return;
-    handlePost(postContent, postImages, postVideos);
+    handlePost(postContent, postImages, postVideos, isCommunique);
   };
 
   const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -126,7 +128,7 @@ const PostModal = ({
           >
             <DialogTitle as="h3" className="text-base/7 font-medium mb-4 flex-1">
               <div className="flex justify-between items-center">
-                <div className="text-lg font-semibold">Post to anyone</div>
+                <div className="text-lg font-semibold">{t("Post to anyone")}</div>
                 <button onClick={() => setIsModalOpen(false)}>
                   <LuX className="size-6" />
                 </button>
@@ -140,7 +142,7 @@ const PostModal = ({
                   !isLoggedIn && 'cursor-not-allowed text-neutral-500'
                 )}
                 autoFocus
-                placeholder={isLoggedIn ? "What's on your mind?" : "Sign in to post"}
+                placeholder={isLoggedIn ? t("What's on your mind?") : t("Sign in to post")}
                 rows={15}
                 value={postContent}
                 onChange={handleTextChange}
@@ -266,6 +268,7 @@ const PostModal = ({
                     </span>
                     /{SHORT_POST_LENGTH}
                   </span>
+                 {authUser.canMakeCommunique && <StarToggle isCommunique={isCommunique} onToggle={setIsCommunique} />}
                   <Button
                     className={cn(
                       'flex items-center gap-2 hover:text-primary-400 cursor-pointer',
@@ -288,7 +291,7 @@ const PostModal = ({
                     disabled={isPending || !isLoggedIn}
                   >
                     {isPending && <LuLoader className="animate-spin size-4 inline-block mx-2" />}
-                    Post
+                    {t("Post")}
                   </Button>
                 </div>
               </div>

@@ -6,9 +6,13 @@ import { User } from '../../../models/datamodels';
 import { useGetRecommendedUsersById } from '../../Profile/hooks';
 import AuthorSugestionComponent from './AuthorSugestionComponent';
 
+import { useTranslation } from 'react-i18next';
+
+
 const AuthorSuggestions: React.FC = () => {
   const { authUser } = useUser();
   const { data: recommendedUsers, isLoading, error } = useGetRecommendedUsersById(authUser?.id || '');
+  const {t} = useTranslation();
 
   // Function to get friendly error messages specific to author suggestions
   const getFriendlyErrorMessage = (error: any): string => {
@@ -66,7 +70,7 @@ const AuthorSuggestions: React.FC = () => {
   if (!recommendedUsers?.length) {
     return (
       <div className="w-full flex flex-col gap-6 mt-4 py-1 text-gray-500 text-center">
-        No recommended authors found yet. Follow some people to get suggestions!
+        {t("feed.noSuggestions")}
       </div>
     );
   }
@@ -77,8 +81,9 @@ const AuthorSuggestions: React.FC = () => {
       {recommendedUsers?.slice(0, 5)?.map((user: User, index: number) => (
         <AuthorSugestionComponent
           key={`${user.id}-${index}`}
+          name={user.name!}
           username={user.username!}
-          title={user.title || 'Suggested Author'}
+          title={user.bio || `${t("no bio")}`}
           id={user._id || ''}
           isverified={user.is_verified_writer!}
         />

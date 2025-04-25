@@ -5,6 +5,7 @@ import { LuDot, LuInfo, LuMenu } from 'react-icons/lu';
 import { cn } from '../../../utils';
 import { useUser } from '../../../hooks/useUser';
 import SignInPopUp from '../../AnonymousUser/components/SignInPopUp';
+import StarToggle from '../../../components/atoms/CommuniqueBtn';
 
 interface CreateTopBarProps {
   title: string;
@@ -18,12 +19,15 @@ interface CreateTopBarProps {
     disabled: boolean;
     ActionIcon: React.ElementType;
   }[];
+  isCommunique: boolean;
+  onToggleCommunique: (isCommunique: boolean) => void;
 }
 
-const CreatePostTopBar: React.FC<CreateTopBarProps> = ({ title, mainAction, actions }: CreateTopBarProps) => {
+const CreatePostTopBar: React.FC<CreateTopBarProps> = ({ title, mainAction, actions, isCommunique, onToggleCommunique }) => {
   const { t } = useTranslation();
   const { isLoggedIn } = useUser();
-  const [showSignInPopup, setShowSignInPopup] = useState<string | null>(null); 
+  const [showSignInPopup, setShowSignInPopup] = useState<string | null>(null);
+  const {authUser} = useUser()
 
   const handleActionBlocked = (action: string) => {
     if (!isLoggedIn) {
@@ -54,6 +58,10 @@ const CreatePostTopBar: React.FC<CreateTopBarProps> = ({ title, mainAction, acti
           {t(title)}
         </h2>
         <div className="flex items-center justify-center gap-2">
+        { authUser.canMakeCommunique &&  <StarToggle
+            isCommunique={isCommunique}
+            onToggle={onToggleCommunique}
+          />}
           <Popover className="relative flex items-center justify-center">
             <PopoverButton
               className={cn(
@@ -75,7 +83,7 @@ const CreatePostTopBar: React.FC<CreateTopBarProps> = ({ title, mainAction, acti
                 <span className="text-sm flex items-center gap-0">
                   <LuDot className="size-8 text-primary-400 animate-pulse" />
                   <span className="text-sm">
-                    Saved every <span className="font-bold text-primary-400">2s</span>
+                    {t("Saved every")} <span className="font-bold text-primary-400">2s</span>
                   </span>
                 </span>
               </PopoverPanel>
@@ -139,7 +147,6 @@ const CreatePostTopBar: React.FC<CreateTopBarProps> = ({ title, mainAction, acti
         </div>
       </div>
 
-      {/* SignIn Popup */}
       {showSignInPopup && (
         <SignInPopUp
           text={showSignInPopup}

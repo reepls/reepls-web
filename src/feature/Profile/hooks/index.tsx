@@ -1,6 +1,6 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
-import { User } from "../../../models/datamodels";
+import { MediaResponse, PostMedia, User } from "../../../models/datamodels";
 import {
   deleteUser,
   getAllUsers,
@@ -8,6 +8,9 @@ import {
   getUserByUsername,
   updateUser,
   getReccomendedUsersById,
+  getUserMedia,
+  getAuthorStatistics,
+  AuthorStatistics,
 } from "../api";
 
 // Hook for fetching a single user by ID
@@ -101,4 +104,33 @@ export const useGetRecommendedUsersById = ( userId: string) => {
     enabled: !!userId, 
   });
   
+};
+
+export const useGetUserMedia = (userId: string) => {
+  return useInfiniteQuery({
+    queryKey: ['userMedia', userId],
+    queryFn: ({ pageParam }) => getUserMedia({ pageParam, userId }),
+    initialPageParam: 1,
+    getNextPageParam: (lastPage: MediaResponse, allPages: MediaResponse[]) => {
+      const mediaFetched = allPages.reduce((acc, page) => {
+        return acc + page.mediaData.reduce((sum: number, post: PostMedia) => sum + post.media.length, 0);
+      }, 0);
+      if (mediaFetched < lastPage.totalMedia) {
+        return allPages.length + 1;
+      }
+      return undefined;
+    },
+    enabled: !!userId,
+  });
+};
+
+// Hook for fetching author statistics by author ID
+export const useGetAuthorStatistics = (
+  authorId: string
+): { statistics: AuthorStatistics | undefined; isLoading: boolean; error: Error | null } => {
+  const { data, isLoading, error } = useQuery({
+    queryKey: ['authorStatistics', authorId],
+    queryFn: () => getAuthorStatistics(authorId),
+  });
+  return { statistics: data, isLoading, error };
 };

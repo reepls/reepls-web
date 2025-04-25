@@ -2,10 +2,11 @@ import {  MessageCircle, ThumbsUp,  } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import { ReadingControls } from '../../../../components/atoms/ReadALoud/ReadingControls';
 import { useUser } from '../../../../hooks/useUser';
-import { User } from '../../../../models/datamodels';
+import { Article, User } from '../../../../models/datamodels';
 import SignInPopUp from '../../../AnonymousUser/components/SignInPopUp';
 import CommentSection from '../../../Comments/components/CommentSection';
 import ReactionModal from '../../../Interactions/components/ReactionModal';
+import { t } from 'i18next';
 
 interface BlogReactionSessionProps {
   message?: string;
@@ -14,6 +15,7 @@ interface BlogReactionSessionProps {
   article_id: string;
   text_to_speech: string;
   author_of_post: User;
+  article:Article
 }
 
 const BlogReactionSession: React.FC<BlogReactionSessionProps> = ({
@@ -23,6 +25,7 @@ const BlogReactionSession: React.FC<BlogReactionSessionProps> = ({
   setIsCommentSectionOpen,
   author_of_post,
   text_to_speech,
+  article
 }) => {
 
   const { isLoggedIn } = useUser(); 
@@ -67,9 +70,9 @@ const BlogReactionSession: React.FC<BlogReactionSessionProps> = ({
             onMouseEnter={() => isLoggedIn && setModalOpen(true)}
             onClick={handleReactClick}
             className="flex items-center gap-2 hover:text-primary-400 cursor-pointer">
-            <ThumbsUp className="size-5" /> React
+            <ThumbsUp className="size-5" /> {t("blog.React")}
           </button>
-          {showReactPopup && <SignInPopUp text="React" position="below" onClose={() => setShowReactPopup(false)} />}
+          {showReactPopup && <SignInPopUp text={t("blog.React")} position="below" onClose={() => setShowReactPopup(false)} />}
         </div>
 
      
@@ -77,15 +80,15 @@ const BlogReactionSession: React.FC<BlogReactionSessionProps> = ({
         {/* Comment Button */}
         <div className="relative">
           <button className="hover:text-primary-400 cursor-pointer flex items-center gap-2" onClick={toggleCommentTab}>
-            <MessageCircle className="size-5" /> Comment
+            <MessageCircle className="size-5" /> {t("blog.Comment")}
           </button>
           {showCommentPopup && (
-            <SignInPopUp text="Comment" position="below" onClose={() => setShowCommentPopup(false)} />
+            <SignInPopUp text={t("blog.Comment")} position="below" onClose={() => setShowCommentPopup(false)} />
           )}
         </div>
            {/* Read Aloud Button */}
            <div className="relative">
-          <ReadingControls article_id={article_id} article_tts={text_to_speech} />
+          <ReadingControls article={article} article_id={article_id} article_tts={text_to_speech} />
         </div>
 
 
@@ -95,6 +98,7 @@ const BlogReactionSession: React.FC<BlogReactionSessionProps> = ({
           onClose={() => setModalOpen(false)}
           onReact={(reaction) => console.log(`Reacted with ${reaction}`)}
           article_id={article_id}
+          article={article}
         />
       </div>
 
@@ -104,6 +108,7 @@ const BlogReactionSession: React.FC<BlogReactionSessionProps> = ({
           article_id={article_id}
           setIsCommentSectionOpen={setIsCommentSectionOpen}
           author_of_post={author_of_post}
+          article={article}
         />
       )}
       {isCommentSectionOpen && (
@@ -111,6 +116,7 @@ const BlogReactionSession: React.FC<BlogReactionSessionProps> = ({
           article_id={article_id}
           setIsCommentSectionOpen={setIsCommentSectionOpen}
           author_of_post={author_of_post}
+          article={article}
         />
       )}
     </div>

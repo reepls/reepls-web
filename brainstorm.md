@@ -352,9 +352,14 @@ i creayed a audioprovider.tsx that handles the current playing post so if you cl
 
 - position the modal for reactions
 - Reporting
-- tylenol, ibuprofen, dayquill
 
 - Somehow auth still has lots of issues
 - Still receiving useless messages like respinse fail with .. instead of useful erros
 
 - Tag input
+
+Urgent fixes:
+
+- When a user does not have a profile pic, do the one with the initial of their name
+- Make the articles view responseive
+- Reove the top bar from article view page

@@ -2,40 +2,54 @@ import { useState, useEffect } from 'react';
 import { LuBrain } from 'react-icons/lu';
 import { cn } from '../../utils';
 import { motion } from 'framer-motion';
+import { t } from 'i18next';
 
 const CognitiveModeIndicator = ({
   className = '',
   isActive = false,
   onClick = () => {},
+  justLoggedIn = false, // New prop to indicate recent login
 }: {
   className?: string;
   isActive?: boolean;
   onClick?: () => void;
+  
+  justLoggedIn?: boolean;
 }) => {
   const [showPopup, setShowPopup] = useState(false);
+  const [_, setLastShown] = useState<number | null>(null);
 
-  // Show popup after 3 seconds on mount if isActive changes
+  // Key for localStorage
+  const STORAGE_KEY = 'cognitiveModePopupLastShown';
+
+  // On mount, check if the popup should show based on last shown time or login
   useEffect(() => {
-    if (isActive !== undefined) {
-      const timer = setTimeout(() => {
-        setShowPopup(true);
-      }, 3000); // Initial delay of 3 seconds
+    // Get the last shown timestamp from localStorage
+    const storedLastShown = localStorage.getItem(STORAGE_KEY);
+    const currentTime = Date.now();
+    const fifteenMinutes = 15 * 60 * 1000; // 15 minutes in milliseconds
 
-      return () => clearTimeout(timer);
+    setLastShown(storedLastShown ? parseInt(storedLastShown) : null);
+
+    // Show popup if just logged in or if 15 minutes have passed since last shown
+    if (justLoggedIn || (storedLastShown && currentTime - parseInt(storedLastShown) >= fifteenMinutes)) {
+      setShowPopup(true);
+      localStorage.setItem(STORAGE_KEY, currentTime.toString());
     }
-  }, [isActive]);
+  }, [justLoggedIn]);
 
-  // Auto-dismiss popup after 30 seconds
+  // Auto-dismiss popup after 8 seconds
   useEffect(() => {
     if (showPopup) {
       const autoDismissTimer = setTimeout(() => {
         setShowPopup(false);
-      }, 8000); 
+      }, 8000);
 
       return () => clearTimeout(autoDismissTimer);
     }
   }, [showPopup]);
 
+  // Handle hover to show popup immediately
   const handleMouseEnter = () => {
     setShowPopup(true);
   };
@@ -46,6 +60,10 @@ const CognitiveModeIndicator = ({
 
   const handleClosePopup = () => {
     setShowPopup(false);
+    // Update the last shown time when manually closed
+    const currentTime = Date.now();
+    localStorage.setItem(STORAGE_KEY, currentTime.toString());
+    setLastShown(currentTime);
   };
 
   // Framer Motion animation variants
@@ -57,8 +75,8 @@ const CognitiveModeIndicator = ({
 
   // Dynamic message based on mode
   const popupMessage = isActive
-    ? "Cognitive Mode is on! Images are hidden. Turn it off to see pictures."
-    : "Cognitive Mode is off! Turn it on to hide images and focus better.";
+    ? t("Cognitive Mode is on! Images are hidden. Turn it off to see pictures.")
+    : t("Cognitive Mode is off! Turn it on to hide images and focus better.");
 
   return (
     <div className="relative">
@@ -93,7 +111,7 @@ const CognitiveModeIndicator = ({
             onClick={handleClosePopup}
             className="mt-2 text-xs underline hover:text-primary-200 transition-colors"
           >
-            Got it
+            {t("Got it!")}
           </button>
         </motion.div>
       )}
