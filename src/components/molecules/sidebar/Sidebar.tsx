@@ -17,7 +17,7 @@ import { toast } from 'react-toastify';
 import { MAX_IMAGE_COUNT, MAX_VIDEO_COUNT } from '../../../constants';
 import { SidebarContext } from '../../../context/SidebarContext/SidebarContext';
 import PostModal from '../../../feature/Blog/components/PostModal';
-import { useCreateArticle } from '../../../feature/Blog/hooks/useArticleHook';
+
 import { useUser } from '../../../hooks/useUser';
 import { Article, MediaItem, MediaType } from '../../../models/datamodels';
 import { cn } from '../../../utils';
@@ -27,6 +27,7 @@ import StarToggle from '../../../components/atoms/CommuniqueBtn';
 import './sidebar.scss';
 import { useNotificationsValues } from '../../../feature/Notifications/hooks';
 import { commuLeft } from '../../../assets/icons';
+import { useSendNewArticleNotification } from '../../../feature/Notifications/hooks/useNotification';
 
 const Sidebar: React.FC = () => {
   const navigate = useNavigate();
@@ -34,7 +35,7 @@ const Sidebar: React.FC = () => {
   const [isCreatingPost, setIsCreatingPost] = useState<boolean>(false);
   const [isCommunique, setIsCommunique] = useState<boolean>(false);
   const { t } = useTranslation();
-  const { mutate: createPost, isPending } = useCreateArticle();
+  const { mutate: createPost, isPending } = useSendNewArticleNotification();
   const { isOpen, toggleSidebar } = useContext(SidebarContext);
 
   const {notifications} = useNotificationsValues();
@@ -52,6 +53,7 @@ const Sidebar: React.FC = () => {
 
   const handleGotoCommuniquePage = ()=>{
     navigate('/posts/communiques')
+    handleToggleSidebar();
   }
 
   const navLinks = [
@@ -160,7 +162,7 @@ const Sidebar: React.FC = () => {
       <div className="flex gap-5 items-center h-[80px]">
         <div
           className="text-roboto text-[24px] font-semibold flex gap-2 items-center cursor-pointer"
-          onClick={() => navigate('/feed')}>
+          onClick={() => {navigate('/feed'); handleToggleSidebar();}}>
           <img src={`/Logo.svg`} alt="reeplsicon" className={`${isOpen ? 'size-8' : 'size-9'}`} />
           {isOpen && 'REEPLS'}
         </div>
@@ -175,6 +177,7 @@ const Sidebar: React.FC = () => {
             link={navItem.link}
             badgeContent={navItem.badgeContent}
             isSidebarcollapsed={isOpen}
+            handleToggleSidebar={handleToggleSidebar}
           />
         ))}
       </div>
@@ -201,24 +204,33 @@ const Sidebar: React.FC = () => {
             {isOpen && t('Create Post')}
           </PopoverButton>
           <PopoverPanel
-            anchor="bottom"
-            className={cn('PopoverContent flex flex-col z-50 mt-2', isOpen ? 'w-40' : 'w-28')}>
-            <div className="block text-center z-[999]">
-              <button
-                className="flex items-center justify-center gap-2 cursor-pointer py-3 px-4 hover:text-primary-400"
-                onClick={() => setIsCreatingPost(true)}>
-                <LuPlus className="size-4" />
-                <span className="text-sm">{!isOpen ? t('Post') : t('Create Post')}</span>
-              </button>
-              <hr className="border-neutral-400 w-3/4 mx-auto" />
-              <button
-                className="flex items-center justify-center gap-2 cursor-pointer py-3 px-4 hover:text-primary-400"
-                onClick={() => navigate('/posts/create')}>
-                <LuPencilLine className="size-4" />
-                <span className="text-sm">{!isOpen ? t('Write') : t('Write Article')}</span>
-              </button>
-            </div>
-          </PopoverPanel>
+  anchor="bottom"
+  className={cn('PopoverContent flex flex-col z-50 mt-2', isOpen ? 'w-40' : 'w-28')}>
+  {({ close }) => (
+    <div className="block text-center z-[999]">
+      <button
+        className="flex items-center justify-center gap-2 cursor-pointer py-3 px-4 hover:text-primary-400"
+        onClick={() => {
+          setIsCreatingPost(true);
+          close();
+        }}>
+        <LuPlus className="size-4" />
+        <span className="text-sm">{!isOpen ? t('Post') : t('Create Post')}</span>
+      </button>
+      <hr className="border-neutral-400 w-3/4 mx-auto" />
+      <button
+        className="flex items-center justify-center gap-2 cursor-pointer py-3 px-4 hover:text-primary-400"
+        onClick={() => {
+          navigate('/posts/create');
+          handleToggleSidebar();
+          close();
+        }}>
+        <LuPencilLine className="size-4" />
+        <span className="text-sm">{!isOpen ? t('Write') : t('Write Article')}</span>
+      </button>
+    </div>
+  )}
+</PopoverPanel>
         </Popover>
       </div>
 

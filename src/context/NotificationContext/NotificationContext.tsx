@@ -2,12 +2,13 @@ import { createContext } from 'react';
 
 export interface Notification {
   _id: string;
-  type: 'reaction' | 'comment' | 'follow' | 'post';
+  type: 'reaction' | 'comment' | 'follow' | 'post' | 'article';
   category: 'comment_reaction' | 'connecting' | 'new_post'; 
   article_id?: string;
   sender_id: string; 
   receiver_id: string | string[]; 
   created_at:Date;
+  slug:string;
   is_read:boolean;
   content: string; 
   timestamp?: Date; 

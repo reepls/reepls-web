@@ -1,4 +1,4 @@
-import { Bookmark, EllipsisVertical,  Share2, UserPlus, X, Trash2, Edit, BarChart2 } from "lucide-react";
+import { Bookmark, EllipsisVertical, Share2, UserPlus, X, Trash2, Edit, BarChart2, Flag } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { LuBadgeCheck, LuLoader } from "react-icons/lu";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -6,8 +6,7 @@ import { toast } from "react-toastify";
 import SharePopup from "../../../../components/molecules/share/SharePopup";
 import { useRoute } from "../../../../hooks/useRoute";
 import { useUser } from "../../../../hooks/useUser";
-import { Article, User } from "../../../../models/datamodels";
-import { formatDateWithMonth } from "../../../../utils/dateFormater";
+import { Article, ArticleDuplicate, User } from "../../../../models/datamodels";
 import { useUnfollowUser } from "../../../Follow/hooks";
 import { useKnowUserFollowings } from "../../../Follow/hooks/useKnowUserFollowings";
 import { useGetSavedArticles, useRemoveSavedArticle, useSaveArticle } from "../../../Saved/hooks";
@@ -18,6 +17,8 @@ import { useDeleteArticle, useUpdateArticle } from "../../hooks/useArticleHook";
 import ConfirmationModal from "../ConfirmationModal";
 import PostEditModal from "../PostEditModal";
 import { t } from "i18next";
+import { calculateReadTime } from "../../../../utils/articles";
+import ReportArticlePopup from "../../../Reports/components/ReportPostPopup";
 
 interface BlogProfileProps {
   date: string;
@@ -29,7 +30,7 @@ interface BlogProfileProps {
   article:Article
 }
 
-const BlogProfile: React.FC<BlogProfileProps> = ({ user, date, article_id,article, title, content, isArticle }) => {
+const BlogProfile: React.FC<BlogProfileProps> = ({ user,article_id,article, title, content, isArticle }) => {
   const { authUser, isLoggedIn } = useUser();
   const { goToProfile } = useRoute();
   const [showMenu, setShowMenu] = useState(false);
@@ -48,6 +49,7 @@ const BlogProfile: React.FC<BlogProfileProps> = ({ user, date, article_id,articl
   const [saved, setSaved] = useState(false);
   const { mutate: followUser, isPending: isFollowPending } = useSendFollowNotification();
   const { mutate: deleteArticle, isPending: isDeletePending } = useDeleteArticle();
+    const [showReportPopup, setShowReportPopup] = useState(false);
 
   const articleTitle = title || (content ? content.split(" ").slice(0, 10).join(" ") + "..." : "Untitled Post");
   const articleUrl = `${window.location.origin}/posts/${isArticle ? "article" : "post"}/${isArticle?'slug/'+article.slug: article_id}`;
@@ -166,6 +168,7 @@ const BlogProfile: React.FC<BlogProfileProps> = ({ user, date, article_id,articl
   };
 
   const handleEllipsisClick = () => {
+    check()
     if (!isLoggedIn) {
       setShowSignInPopup(true);
     } else {
@@ -187,9 +190,15 @@ const BlogProfile: React.FC<BlogProfileProps> = ({ user, date, article_id,articl
     setShowMenu(false);
   };
 
+  function check(){
+console.log('saved',saved)
+console.log('saved Article',savedArticles)
+console.log('id article',article_id)
+  }
+
   useEffect(() => {
-    const isSaved = savedArticles?.articles?.some((article: Article) => article._id === article_id);
-    setSaved(isSaved || false);
+    const isSaved = savedArticles?.articles?.some((article: ArticleDuplicate) => article?.article?._id === article_id);
+    setSaved(isSaved );
   }, [savedArticles, article_id]);
 
   const getFollowStatusText = (isMenu = false) => {
@@ -201,8 +210,8 @@ const BlogProfile: React.FC<BlogProfileProps> = ({ user, date, article_id,articl
 
   const getSaveStatusText = () => {
     if (!isLoggedIn) return t("blog.AddToSaved");
-    if (isSavePending) return t("blog.Saving");
-    if (isRemovePending) return t("blog.Removing");
+    if (isSavePending) return t("blog.saving");
+    if (isRemovePending) return t("blog.removing");
     return saved ? t("blog.UnsavePost") : t("blog.AddToSaved");
   };
 
@@ -252,7 +261,7 @@ const BlogProfile: React.FC<BlogProfileProps> = ({ user, date, article_id,articl
           )}
         </div>
         <p className="text-sm text-neutral-100">{user?.bio}</p>
-        <span className="text-sm text-neutral-100">{formatDateWithMonth(date)}</span>
+        <span className="text-sm text-neutral-100">{calculateReadTime(article.content!, article.media || [])} mins Read</span>
       </div>
       <div className="relative">
         {showMenu ? (
@@ -307,9 +316,13 @@ const BlogProfile: React.FC<BlogProfileProps> = ({ user, date, article_id,articl
                     <Bookmark size={18} className="text-neutral-500" />
                     <div>{getSaveStatusText()}</div>
                   </div>
-                  {/* <div className="flex items-center gap-2 px-4 py-2 hover:bg-neutral-700 cursor-pointer">
-                    <EyeOff size={18} className="text-neutral-500" /> {t("blog.Hidepost")}
-                  </div> */}
+                 <div
+                  className="flex items-center gap-2 px-4 py-2 hover:bg-neutral-700 cursor-pointer"
+                  onClick={() => setShowReportPopup(true)}
+                >
+                  <Flag size={18} className="text-neutral-500" />
+                  {t("blog.ReportPost")}
+                </div>
                   <div
                     className="flex items-center gap-2 px-4 py-2 hover:bg-neutral-700 cursor-pointer"
                     onClick={handleFollowClick}
@@ -338,6 +351,13 @@ const BlogProfile: React.FC<BlogProfileProps> = ({ user, date, article_id,articl
       </div>
       {showSharePopup && (
         <SharePopup url={articleUrl} title={articleTitle} onClose={() => setShowSharePopup(false)} />
+      )}
+          {showReportPopup && (
+        <ReportArticlePopup
+          articleTitle={articleTitle}
+          articleId={article_id}
+          onClose={() => setShowReportPopup(false)}
+        />
       )}
       {showDeleteConfirmation && (
         <ConfirmationModal
