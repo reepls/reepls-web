@@ -118,7 +118,7 @@ const ProfileConfigurations: React.FC = () => {
         }
       } catch (error: any) {
         console.error('Error unsubscribing from notifications:', error);
-        toast.error(t('Failed to disable notifications: ') + (error.message || 'Unknown error'));
+        toast.error(t('Failed to disable notifications: ') );
       }
     } else {
       // Subscribe to notifications
@@ -153,7 +153,7 @@ const ProfileConfigurations: React.FC = () => {
         toast.success(t('Notifications enabled successfully!'));
       } catch (error: any) {
         console.error('Push subscription failed:', error);
-        toast.error(t('Failed to enable notifications: ') + (error.message || 'Unknown error'));
+        toast.error(t('Failed to enable notifications: ') );
       }
     }
   };
@@ -215,13 +215,13 @@ const ProfileConfigurations: React.FC = () => {
     }
   };
 
-  const handleDraftsClick = () => {
-    if (authUser?.id) {
-      navigate(`/drafts/${authUser.id}`);
-    } else {
-      console.log("User ID not found, cannot navigate.");
-    }
-  };
+  // const handleDraftsClick = () => {
+  //   if (authUser?.id) {
+  //     navigate(`/drafts/${authUser.id}`);
+  //   } else {
+  //     console.log("User ID not found, cannot navigate.");
+  //   }
+  // };
 
   const handleTermsClick = () => {
     navigate(`/Terms&Policies`);
@@ -274,11 +274,11 @@ const ProfileConfigurations: React.FC = () => {
             {t(`View Analytics`)}
           </div>
         </ConfigurationWrapper>
-        <ConfigurationWrapper>
+        {/* <ConfigurationWrapper>
           <div className="cursor-pointer w-full" onClick={handleDraftsClick}>
             {t(`Drafts`)}
           </div>
-        </ConfigurationWrapper>
+        </ConfigurationWrapper> */}
 
         <ConfigurationWrapper>
           <div>{t(`Default Language`)}</div>
@@ -423,28 +423,28 @@ const ProfileConfigurations: React.FC = () => {
       {showLogoutPopup && (
         <>
           <div
-            className="fixed inset-0 bg-black bg-opacity-5 z-[910]"
+            className="fixed inset-0 bg-black bg-opacity-5 z-[9999]"
             onClick={handleCancelLogout}
           ></div>
-          <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-neutral-800 rounded-md shadow-lg p-6 z-[910] w-[40%] flex flex-col items-center">
-            <h2 className="text-neutral-50 text-lg font-semibold mb-4">
-              {t("Are you sure you want to log out?")}
-            </h2>
-            <div className="flex justify-end gap-4">
-              <button
-                className="px-8 py-2 bg-neutral-700 text-neutral-50 rounded-md hover:bg-neutral-600"
-                onClick={handleCancelLogout}
-              >
-                {t("No")}
-              </button>
-              <button
-                className="px-8 py-2 bg-red-500 text-neutral-50 rounded-md hover:bg-red-600"
-                onClick={handleConfirmLogout}
-              >
-                {t("Yes")}
-              </button>
-            </div>
-          </div>
+      <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-neutral-800 rounded-md shadow-lg p-4 sm:p-6 z-[9999] w-[90%] sm:w-[70%] md:w-[50%] lg:w-[40%] flex flex-col items-center">
+  <h2 className="text-neutral-50 text-base sm:text-lg font-semibold mb-3 sm:mb-4 text-center">
+    {t("Are you sure you want to log out?")}
+  </h2>
+  <div className="flex justify-end gap-3 sm:gap-4 w-full">
+    <button
+      className="px-4 sm:px-6 md:px-8 py-1 sm:py-2 bg-neutral-700 text-neutral-50 rounded-md hover:bg-neutral-600 text-sm sm:text-base"
+      onClick={handleCancelLogout}
+    >
+      {t("No")}
+    </button>
+    <button
+      className="px-4 sm:px-6 md:px-8 py-1 sm:py-2 bg-red-500 text-neutral-50 rounded-md hover:bg-red-600 text-sm sm:text-base"
+      onClick={handleConfirmLogout}
+    >
+      {t("Yes")}
+    </button>
+  </div>
+</div>
         </>
       )}
     </div>

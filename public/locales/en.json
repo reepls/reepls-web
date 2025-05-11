@@ -57,6 +57,10 @@
   "Environment": "Environment",
   "Engineering": "Engineering",
   "Enter your name": "Enter your name",
+  "Please login to write an article": "Please login to write an article",
+  "Please login to create a post": "Please login to create a post",
+  "Sign in for an amazing experience! Comment, react, follow, and more!": "Sign in for an amazing experience! Comment, react, follow, and more!",
+  "this page is empty! Follow some users to see their posts or check back later for new content.": "this page is empty! Follow some users to see their posts or check back later for new content.",
   "Almost there! Enter your legal name": "Almost there! Enter your legal name",
   "Create Account with Email instead": "Create Account with Email instead",
   "Enow, you’re in! Select your interests": "Enow, you’re in! Select your interests",
@@ -184,6 +188,12 @@
   "Press '/' for commands": "Press '/' for commands",
   "New Article": "New Article",
   "Drop your thoughts and let them": "Drop your thoughts and let them",
+  "Inappropriate content": "Inappropriate content",
+  "False information": "False information",
+  "Spam or advertisement": "Spam or advertisement",
+  "Plagiarism": "Plagiarism",
+  "Hate speech": "Hate speech",
+  "Other": "Other",
   "header": {
     "signIn": "Sign In",
     "signUp": "Sign Up"
@@ -309,8 +319,8 @@
     "noPosts": "No saved posts yet",
     "noArticles": "No saved articles yet",
     "tabs": {
-      "posts": "post",
-      "articles": "articles",
+      "posts": "Posts",
+      "articles": "Articles",
       "history": "Reading History"
     },
     "topSavedAuthors": "Your top saved Authors",
@@ -347,6 +357,15 @@
 
   "report": {
     "title": "Report \"{{username}}\"",
+    "articleTitle": "Article Title",
+    "articleSubtitle": "Article Subtitle",
+    "selectReason": "Select a reason",
+    "authenticationError": "You must be logged in to report a user",
+    "reporting": "Reporting...",
+    "additionalDetails": "Additional details",
+    "optionalButRecommended": "optional but recommended",
+    "characterLimit": "Character limit",
+    "detailsPlaceholder": "Please provide any additional details about the report",
     "characterNum": "500 characters",
     "clear": "Clear",
     "submit": "Submit",
@@ -362,6 +381,10 @@
     "noPosts": "We couldn't find any Posts.",
     "Cameroon": "Cameroon",
     "profile": "Profile",
+    "totalComments": "Total Comments",
+    "totalShares": "Total Shares",
+    "totalFollows": "Total Follows",
+    "profileViews": "Profile Views",
     "notifications": "Notifications",
     "name": "Name",
     "bio": "Bio",
@@ -403,7 +426,7 @@
       "unfollowFailed": "Failed to unfollow user",
       "followSuccess": "User followed successfully",
       "followFailed": "Failed to follow user",
-      "following": "Following...",
+      "following": "Following",
       "unfollowing": "Unfollowing...",
       "follow": "Follow",
       "unfollow": "Unfollow",
@@ -449,11 +472,14 @@
     }
   },
 
+
+
   "blog": {
     "Continuereading": "Continue reading",
     "seeMore":"See more",
     "seeLess":"See less",
     "Followauthor":"Follow author",
+    "ReportPost":"Report post",
     "Unfollowauthor":"Unfollow author",
     "AddToSaved":"Add to saved",
     "Remove From Saved":"Remove from saved",
@@ -468,6 +494,7 @@
     "Delete": "Delete",
     "Hidepost": "Hide post",
     "React": "React",
+    "Reacted": "Reacted",
     "Comment": "Comment",
     "Comments": "Comments",
     "Article": "Article",

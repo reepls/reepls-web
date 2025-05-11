@@ -9,12 +9,13 @@ interface ProfileDetailsProps {
   name: string;
   town: string;
   user_id: string;
+  username:string
   bio: string;
   role: string;
   isverified:boolean;
 }
 
-const ProfileDetails: React.FC<ProfileDetailsProps> = ({ name, town,role,user_id,bio,isverified }) => {
+const ProfileDetails: React.FC<ProfileDetailsProps> = ({ name, town,role,user_id,bio,isverified,username }) => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { goToFollowingsPage } = useRoute();
@@ -39,6 +40,7 @@ const ProfileDetails: React.FC<ProfileDetailsProps> = ({ name, town,role,user_id
         {name}
       {isverified &&  <LuBadgeCheck className="size-4 text-primary-400 mt-1" />}
       </div>
+      <p className="text-[14px] ">{username}</p>
       <p className="text-[13px]">{bio}</p>
         </div>
         <div className='sm:hidden' onClick={handleGotoProfileSettings} >
@@ -53,7 +55,7 @@ const ProfileDetails: React.FC<ProfileDetailsProps> = ({ name, town,role,user_id
           <LuBriefcase className="size-4" /> {role}
         </div>
         <div className="flex gap-1">
-          <LuMapPin className="size-4" /> {town? `${town},`:''} {t("cameroon")}
+          <LuMapPin className="size-4" /> {town? `${town}`:''} 
         </div>
       </div>
       <div className="flex text-[13px] gap-3 mt-1 items-center">

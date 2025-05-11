@@ -3,7 +3,7 @@ import { useUser } from "../../../hooks/useUser";
 import { Comment } from "../../../models/datamodels";
 import { LuLoader, LuSend } from "react-icons/lu";
 import { FaRegUserCircle } from "react-icons/fa";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { useTranslation } from "react-i18next";
 import EmojiPicker, { Theme } from "emoji-picker-react";
@@ -16,7 +16,8 @@ interface CommentTabProps {
   setIsCommentSectionOpen: (isOpen: boolean) => void;
 }
 
-const CommentTab: React.FC<CommentTabProps> = ({
+const 
+CommentTab: React.FC<CommentTabProps> = ({
   article_id,
   setIsCommentSectionOpen,
 }) => {
@@ -96,11 +97,13 @@ const CommentTab: React.FC<CommentTabProps> = ({
     };
   }, []);
 
-  useEffect(() => {
-    if (CommentTabRef.current && isLoggedIn) {
-      CommentTabRef.current.focus();
-    }
-  }, [isLoggedIn]);
+const location = useLocation(); // Get current URL path
+
+useEffect(() => {
+  if (CommentTabRef.current && isLoggedIn && !location.pathname.includes("/posts/article/")) {
+    CommentTabRef.current.focus();
+  }
+}, [isLoggedIn, location.pathname]);
 
   return (
     <div className="px-4">

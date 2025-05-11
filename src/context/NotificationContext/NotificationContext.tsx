@@ -7,10 +7,11 @@ export interface Notification {
   article_id?: string;
   sender_id: string; 
   receiver_id: string | string[]; 
-  created_at:Date;
+  created_at:string;
   slug:string;
   is_read:boolean;
   content: string; 
+  isArticle?:boolean;
   timestamp?: Date; 
 }
 
