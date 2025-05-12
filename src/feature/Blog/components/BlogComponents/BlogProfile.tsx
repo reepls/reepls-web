@@ -191,9 +191,7 @@ const BlogProfile: React.FC<BlogProfileProps> = ({ user,article_id,article, titl
   };
 
   function check(){
-console.log('saved',saved)
-console.log('saved Article',savedArticles)
-console.log('id article',article_id)
+
   }
 
   useEffect(() => {
@@ -233,6 +231,7 @@ console.log('id article',article_id)
           alt="avatar"
           onClick={() => handleProfileClick(user?.username || "")}
           className="cursor-pointer size-14 rounded-full object-cover"
+            loading="lazy"
         />
       ) : (
         <span

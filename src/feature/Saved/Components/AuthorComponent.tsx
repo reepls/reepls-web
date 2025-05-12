@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, {  useState } from 'react';
 import { LuBadgeCheck, LuEllipsisVertical } from 'react-icons/lu';
 import { UserPlus,  X } from 'lucide-react';
 import {  useUnfollowUser } from '../../Follow/hooks';
@@ -28,9 +28,7 @@ const AuthorComponent: React.FC<AuthorComponentProps> = ({ username }) => {
   const { t } = useTranslation();
   const {authUser} = useUser();
 
-  useEffect(() => {
-    console.log('userer', user);
-  }, [user]);
+ 
 
   const handleFollowClick = () => {
     if (isFollowPending || isUnfollowPending || !user?.id) return;
@@ -63,7 +61,6 @@ const AuthorComponent: React.FC<AuthorComponentProps> = ({ username }) => {
   const handleBlockConfirm = () => {
     if (!user?.id) return;
 
-    console.log(`Blocked ${user.username}`);
     toast.success(`User ${user.username} blocked successfully`);
     setShowBlockConfirm(false);
     setShowMenu(false);
@@ -99,6 +96,7 @@ const AuthorComponent: React.FC<AuthorComponentProps> = ({ username }) => {
             alt="avatar"
             className="cursor-pointer w-10 h-10 rounded-full object-cover"
             onClick={handleViewProfile}
+              loading="lazy"
           />
         ) : (
           <span

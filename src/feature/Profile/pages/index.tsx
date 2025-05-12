@@ -12,7 +12,7 @@ import ProfileHeroButtons from "../components/ProfileHeroButtons";
 import ProfileMedia from "../components/ProfileMedia";
 import ProfilePosts from "../components/ProfilePosts";
 import { useGetUserByUsername } from "../hooks";
-import { useUser } from "../../../hooks/useUser";
+
 import SimilarProfiles from "../components/SimilarProfiles";
 import { User } from "lucide-react";
 import ProfileSkeleton from "../components/ProfileSkeleton";
@@ -20,13 +20,14 @@ import ProfileSkeleton from "../components/ProfileSkeleton";
 import BlogSkeletonComponent from "../../Blog/components/BlogSkeleton"; // Adjust path
 import { useGetAuthorArticles, useGetAuthorPosts } from "../../Blog/hooks/useArticleHook";
 import ProfileRightSideSkeleton from "../components/ProfileRightSideSkeleton";
+import { getDecryptedUser } from "../../Auth/api/Encryption";
 
 
 const Profile: React.FC = () => {
   
   const { t } = useTranslation();
   const { username } = useParams<{ username?: string }>();
-  const { authUser } = useUser();
+  const  authUser  = getDecryptedUser()
   const bottomRef = useRef<HTMLDivElement>(null); // Ref for infinite scroll trigger
 
   const { user: userByUsername, isLoading: isLoadingUsername, error: errorUsername } = useGetUserByUsername(username || "");
@@ -55,14 +56,7 @@ const Profile: React.FC = () => {
     isFetchingNextPage: isFetchingNextArticles,
   } = useGetAuthorArticles(authorId);
 
-  useEffect(() => {
-    if (user) {
-      console.log("Displayed username:", user?.username);
-      console.log("Username from params:", username);
-      console.log("authUser", authUser);
-      console.log(username?.trim() === authUser?.username?.trim());
-    }
-  }, [user, username, authUser]);
+  
 
   const isAuthUser = username?.trim() === authUser?.username?.trim();
 
@@ -87,10 +81,8 @@ const Profile: React.FC = () => {
       (entries) => {
         if (entries[0].isIntersecting) {
           if (activeTab === "posts" && hasNextPosts && !isFetchingNextPosts) {
-            console.log("Fetching next author posts...");
             fetchNextPosts();
           } else if (activeTab === "articles" && hasNextArticles && !isFetchingNextArticles) {
-            console.log("Fetching next author articles...");
             fetchNextArticles();
           }
         }
@@ -121,9 +113,7 @@ const Profile: React.FC = () => {
     isFetchingNextArticles,
   ]);
 
-  useEffect(()=>{
-    if(user)console.log('picture',user.profile_picture)
-  },[user])
+ 
 
   if (isLoading) {
     return (
