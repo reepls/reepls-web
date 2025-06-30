@@ -22,21 +22,16 @@ import { useTokenStorage } from './useTokenStorage';
 
 // Hook for registering a user with email
 export const useRegisterUser = () => {
-  const navigate = useNavigate();
   const { login } = useContext(AuthContext);
 
-  const navigateToCheckMail = (userEmail: EmailCode) => {
-    navigate('/auth/register/checkemail', { state: userEmail });
-  };
 
   return useMutation({
     mutationFn: (user: User) => registerUser(user),
     onSuccess: (data: LoginResponse) => {
       login(data); // Pass the full LoginResponse to encrypt and store
-      navigateToCheckMail({ email: data.user.email! });
     },
     onError: (error) => {
-      console.error('Error registering user:', error);
+      void error;
       return 'Error registering user';
     },
   });
@@ -63,21 +58,15 @@ export const useLogOutUserWithGoogle = () => {
 
 // Hook for registering a user with phone number
 export const usePhoneRegisterUser = () => {
-  const navigate = useNavigate();
   const { login } = useContext(AuthContext);
-
-  const navigateToCheckPhone = (phonecode: PhoneCode) => {
-    navigate('/auth/register/checkphone', { state: phonecode });
-  };
 
   return useMutation({
     mutationFn: (user: User) => registerUser(user),
     onSuccess: (data: LoginResponse) => {
       login(data); // Pass the full LoginResponse to encrypt and store
-      navigateToCheckPhone({ phone: data.user.phone! });
     },
     onError: (error) => {
-      console.error('Error registering user:', error);
+      void error;
     },
   });
 };
@@ -99,7 +88,7 @@ export const useLoginUser = () => {
       navigateToFeed();
     },
     onError: (error) => {
-      console.error('Error logging in:', error);
+     void error;
     },
   });
 };
@@ -121,7 +110,7 @@ export const useLoginUserWithPhone = () => {
       navigateToFeed();
     },
     onError: (error) => {
-      console.error('Error logging in:', error);
+      void error;
     },
   });
 };
@@ -140,7 +129,7 @@ export const useUpdateUser = () => {
       navigateToUserProfile();
     },
     onError: (error) => {
-      console.error('Error updating user:', error);
+      void error;
     },
   });
 };
@@ -150,7 +139,7 @@ export const useGetEmailCode = () => {
   return useMutation({
     mutationFn: (emailCode: EmailCode) => getEmailVerificationCode(emailCode),
     onError: (error) => {
-      console.error('Error getting email code:', error);
+      void error;
     },
   });
 };
@@ -158,19 +147,10 @@ export const useGetEmailCode = () => {
 // Hook for verifying email code
 export const useVerifyEmailCode = () => {
   //   const { storeAccessToken, storeRefreshToken } = useTokenStorage();
-  const navigate = useNavigate();
-
-  const navigateToName = () => {
-    navigate('/auth/register/email/two');
-  };
-
   return useMutation({
     mutationFn: (codeVerify: CodeVerify) => verifyEmailCode(codeVerify),
-    onSuccess: () => {
-      navigateToName();
-    },
     onError: (error) => {
-      console.error('Error verifying email code:', error);
+      void error;
     },
   });
 };
@@ -181,25 +161,18 @@ export const useGetPhoneCode = () => {
     mutationFn: (phoneCode: PhoneCode) => getPhoneVerificationCode(phoneCode),
    
     onError: (error) => {
-      console.error('Error getting phone code:', error);
+      void error;
     },
   });
 };
 
 // Hook for verifying phone code
 export const useVerifyPhoneCode = () => {
-  const navigate = useNavigate();
 
-  const navigateToName = () => {
-    navigate('/auth/register/phone/two');
-  };
   return useMutation({
     mutationFn: (phoneVerify: PhoneVerify) => verifyPhoneCode(phoneVerify),
-    onSuccess: () => {
-      navigateToName();
-    },
     onError: (error) => {
-      console.error('Error verifying phone code:', error);
+      void error;
     },
   });
 };
@@ -213,7 +186,7 @@ export const useRefreshToken = () => {
     onSuccess: () => {
     },
     onError: (error) => {
-      console.error(error);
+     void error;
     },
   });
 };
@@ -224,7 +197,7 @@ export const useLogoutUser = (token: string) => {
   return useMutation({
     mutationFn: () => logoutUser(token), 
     onError: (error) => {
-      console.error("Error logging out:", error); 
+      void error;
     },
   });
 };

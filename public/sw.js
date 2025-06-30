@@ -5,7 +5,7 @@ self.addEventListener('push', event => {
     
     const options = {
       body: data.body,
-      icon: `/Logo.svg`, // Add your app icon
+      icon: `/favicon.png`, // Add your app icon
       data: data.data || {} // Pass through all the data from the payload
     };
 
@@ -57,7 +57,7 @@ self.addEventListener('push', event => {
       self.registration.showNotification(data.title, options)
     );
   } catch (error) {
-    console.error('Error processing push notification:', error);
+    void error;
   }
 });
 
@@ -218,7 +218,7 @@ self.addEventListener('notificationclick', event => {
       })
     );
   } catch (error) {
-    console.error('Error handling notification click:', error);
+    void error;
     // Fallback to opening the homepage
     event.waitUntil(clients.openWindow('/'));
   }
