@@ -1,9 +1,11 @@
-import { Button, Dialog, DialogBackdrop, DialogPanel, DialogTitle } from '@headlessui/react';
+import { Dialog, DialogBackdrop, DialogPanel, DialogTitle } from '@headlessui/react';
 import Picker, { Theme } from 'emoji-picker-react';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { LuCalendar, LuImage, LuLoader, LuPlus, LuSmile, LuVideo, LuX } from 'react-icons/lu';
+import { LuLoader, LuTag } from 'react-icons/lu';
+import { X, MoreVertical, Star } from 'lucide-react';
 import { toast } from 'react-toastify';
+import TagsModal from './TagsModal';
 import {
   allowedImageTypes,
   allowedVideoTypes,
@@ -18,6 +20,9 @@ import SignInPopUp from '../../AnonymousUser/components/SignInPopUp';
 import { useGetArticleById, useUpdateArticle } from '../../../feature/Blog/hooks/useArticleHook';
 import { Article, MediaItem, MediaType } from '../../../models/datamodels';
 import { uploadPostImage, uploadPostVideo } from '../../../utils/media';
+import smile from '../../../assets/images/smile.png';
+import image from '../../../assets/images/image-02.png';
+import video from '../../../assets/images/video-02.png';
 
 const PostEditModal = ({
   isModalOpen,
@@ -34,11 +39,21 @@ const PostEditModal = ({
   const [postImages, setPostImages] = useState<File[]>([]);
   const [postVideos, setPostVideos] = useState<File[]>([]);
   const [existingMedia, setExistingMedia] = useState<MediaItem[]>([]);
+  const [isCommunique, setIsCommunique] = useState<boolean>(false);
   const [isEmojiPickerOpen, setIsEmojiPickerOpen] = useState<boolean>(false);
   const [showSignInPopup, setShowSignInPopup] = useState<string | null>(null);
+  const [isFocused, setIsFocused] = useState<boolean>(false);
+  const [showMenu, setShowMenu] = useState<boolean>(false);
+  const [tags, setTags] = useState<string[]>([]);
+  const [showTagsModal, setShowTagsModal] = useState<boolean>(false);
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+
   const { theme } = useTheme();
   const { t } = useTranslation();
-  const { isLoggedIn } = useUser();
+  const { isLoggedIn, authUser } = useUser();
+
+  const textareaRef = useRef<HTMLTextAreaElement | null>(null);
+  const highlightRef = useRef<HTMLDivElement | null>(null);
 
   const { data: article, isLoading: isFetching } = useGetArticleById(articleId);
   const { mutate: updateArticle, isPending: isUpdating } = useUpdateArticle();
@@ -53,8 +68,62 @@ const PostEditModal = ({
       setExistingMedia([...images, ...videos]);
       setPostImages([]);
       setPostVideos([]);
+      setIsCommunique(article.isCommunique || false);
+      setTags(article.tags || []);
     }
   }, [article]);
+
+  useEffect(() => {
+    const ta = textareaRef.current;
+    const hl = highlightRef.current;
+    if (!ta || !hl) return;
+
+    const onScroll = () => {
+      // Use requestAnimationFrame for smoother scrolling on mobile
+      requestAnimationFrame(() => {
+        hl.scrollTop = ta.scrollTop;
+        hl.scrollLeft = ta.scrollLeft;
+      });
+    };
+
+    // Add both scroll and touchmove events for better mobile support
+    ta.addEventListener('scroll', onScroll, { passive: true });
+    ta.addEventListener('touchmove', onScroll, { passive: true });
+    
+    return () => {
+      ta.removeEventListener('scroll', onScroll);
+      ta.removeEventListener('touchmove', onScroll);
+    };
+  }, [postContent, article]); // Re-run when content or article changes to ensure scroll sync works
+
+  // Reset submitting state when pending becomes false (submission completed)
+  useEffect(() => {
+    if (!isPending && isSubmitting) {
+      setIsSubmitting(false);
+    }
+  }, [isPending, isSubmitting]);
+
+  // Reset submitting state when modal closes
+  useEffect(() => {
+    if (!isModalOpen) {
+      setIsSubmitting(false);
+    }
+  }, [isModalOpen]);
+
+  const escapeHtml = (str: string) =>
+    str
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+
+  const buildHighlightedHtml = (text: string) => {
+    if (!text) return '';
+    let escaped = escapeHtml(text);
+    escaped = escaped.replace(/(#\w+)/g, '<span class="text-green-500">$1</span>');
+    escaped = escaped.replace(/\n/g, '<br/>');
+    return escaped;
+  };
 
   const handleActionBlocked = (action: string) => {
     if (!isLoggedIn) {
@@ -101,12 +170,19 @@ const PostEditModal = ({
   const handleUpdatePost = async () => {
     if (handleActionBlocked('update post')) return;
 
+    // Prevent multiple submissions
+    if (isSubmitting || isPending) return;
+
+    // Set submitting state immediately to prevent multiple clicks
+    setIsSubmitting(true);
+
     const images: MediaItem[] = [];
     const videos: MediaItem[] = [];
     const userId = article?.author_id?._id;
 
     if (!userId) {
       toast.error('User ID not found');
+      setIsSubmitting(false);
       return;
     }
 
@@ -116,6 +192,7 @@ const PostEditModal = ({
         images.push({ url, type: MediaType.Image });
       } catch (error) {
         toast.error('Failed to upload image');
+        setIsSubmitting(false);
         return;
       }
     }
@@ -126,13 +203,14 @@ const PostEditModal = ({
         videos.push({ url, type: MediaType.Video });
       } catch (error) {
         toast.error('Failed to upload video');
+        setIsSubmitting(false);
         return;
       }
     }
 
     const updatedMedia = [...existingMedia, ...images, ...videos];
 
-  
+   
     const updatedPostData = {
       articleId,
       article: {
@@ -142,30 +220,33 @@ const PostEditModal = ({
         type: 'ShortForm',
         status: 'Published',
         isArticle: false,
+        isCommunique: isCommunique,
+        tags: tags,
       } as Article, 
     };
 
     updateArticle(updatedPostData, {
       onSuccess: () => {
         toast.success('Post updated successfully');
+        setIsSubmitting(false);
         setIsModalOpen(false);
       },
       onError: (error: any) => {
         toast.error('Error updating post: ' + (error?.response?.data?.message || error?.message));
+        setIsSubmitting(false);
       },
     });
   };
 
   const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     if (handleActionBlocked('edit post')) return;
-    if (e.target.value.length <= SHORT_POST_LENGTH) {
-      setPostContent(e.target.value);
-    }
+    setPostContent(e.target.value);
   };
 
-  const handleEmojiClick = () => {
-    if (handleActionBlocked('add an emoji')) return;
-    setIsEmojiPickerOpen(!isEmojiPickerOpen);
+  const handleEmojiClick = () => setIsEmojiPickerOpen((v) => !v);
+
+  const handleSaveTags = (newTags: string[]) => {
+    setTags(newTags);
   };
 
   const handleRemoveMedia = (type: 'image' | 'video', index: number, isExisting: boolean) => {
@@ -186,28 +267,114 @@ const PostEditModal = ({
     <Dialog
       open={isModalOpen}
       as="div"
-      className="relative z-[999] focus:outline-none"
-      onClose={() => setIsModalOpen(false)}
+      className="relative z-[9990] focus:outline-none"
+      onClose={() => {
+        if (!showTagsModal) {
+          setIsModalOpen(false);
+        }
+      }}
     >
-      <DialogBackdrop className="fixed inset-0 bg-black/30" />
+      <DialogBackdrop className="fixed inset-0 z-[9990] bg-black/20" />
 
-      <div className="fixed inset-0 z-50 w-screen overflow-y-auto">
+      <div className="fixed inset-0 z-[9990] w-screen overflow-y-auto">
         <div className="flex min-h-full items-center justify-center p-4">
           <DialogPanel
-            transition
             className={cn(
-              'w-full h-full md:max-w-xl lg:max-w-2xl xl:max-w-3xl rounded-xl bg-background p-6 backdrop-blur-2xl duration-300 ease-out data-[closed]:transform-[scale(95%)] data-[closed]:opacity-0',
-              isModalOpen ? 'opacity-100' : 'opacity-0'
+              'w-full max-w-[95vw] sm:max-w-xl lg:max-w-2xl xl:max-w-3xl rounded-xl bg-background p-4 sm:p-6 backdrop-blur-2xl duration-300 ease-out',
+              isModalOpen ? 'opacity-100' : 'opacity-0',
+              showTagsModal ? 'pointer-events-none opacity-50' : ''
             )}
           >
-            <DialogTitle as="h3" className="text-base/7 font-medium mb-4 flex-1">
-              <div className="flex justify-between items-center">
-                <div className="text-lg font-semibold">Edit Post</div>
-                <button onClick={() => setIsModalOpen(false)}>
-                  <LuX className="size-6" />
-                </button>
-              </div>
+            {/* Title */}
+            <DialogTitle
+              as="h3"
+              className="text-lg font-semibold mb-4 flex items-center justify-center relative"
+            >
+              <span className="w-full text-center block">{t('Edit Post')}</span>
+              <X
+                size={32}
+                className="absolute right-0 top-1/2 -translate-y-1/2 cursor-pointer bg-neutral-800 rounded-full p-2 shadow hover:bg-neutral-700"
+                style={{ marginRight: '0.25rem' }}
+                onClick={() => {
+                  if (!showTagsModal) {
+                    setIsModalOpen(false);
+                  }
+                }}
+                strokeWidth={2.5}
+              />
             </DialogTitle>
+
+            {/* User Preview */}
+            {isLoggedIn && authUser && (
+              <div
+                className="flex items-center mb-2 justify-between w-[95%] max-w-[600px] mx-auto mb-2"
+                style={{ marginTop: '0.5rem' }}
+              >
+                <div className="flex items-center gap-3">
+                  {authUser.profile_picture ? (
+                    <img
+                      src={authUser.profile_picture}
+                      alt={authUser.name}
+                      className="w-12 h-12 rounded-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-12 h-12 rounded-full bg-gray-400 flex items-center justify-center text-white font-semibold">
+                      {authUser?.name
+                        ? authUser.name
+                        .split(' ')
+                        .map((n) => n[0])
+                        .join('')
+                        .toUpperCase(): ""}
+                    </div>
+                  )}
+                  <div className="flex flex-col">
+                    <span className="font-semibold text-base">{authUser.name}</span>
+                    {authUser.bio && (
+                      <span
+                        className="text-neutral-200 text-sm truncate max-w-[120px] sm:max-w-[150px] md:max-w-[200px]"
+                        title={authUser.bio}
+                      >
+                        {authUser.bio.length > 30 ? `${authUser.bio.substring(0, 30)}...` : authUser.bio}
+                      </span>
+                    )}
+                  </div>
+                </div>
+                <div className="relative group">
+                  <MoreVertical
+                    size={18}
+                    className="text-neutral-300 cursor-pointer"
+                    onClick={() => setShowMenu((v) => !v)}
+                  />
+                  {showMenu && (
+                    <div className="absolute right-0 mt-2 w-48 bg-background border border-neutral-600 rounded-lg shadow-lg p-3 z-50">
+                      <button
+                        className="w-full text-left p-2 hover:bg-neutral-700 rounded flex items-center gap-2 text-sm transition-colors"
+                        onClick={() => {
+                          setIsCommunique(!isCommunique);
+                          setShowMenu(false);
+                        }}
+                      >
+                        <Star size={16} className={isCommunique ? "text-secondary-400 fill-secondary-400" : "text-neutral-400"} />
+                        {isCommunique ? 'Undo Communiquer' : 'Set as Communiquer'}
+                      </button>
+                      
+                      <div className="border-t border-neutral-600 my-2"></div>
+                      
+                      <button
+                        className="w-full text-left p-2 hover:bg-neutral-700 rounded flex items-center gap-2 text-sm transition-colors"
+                        onClick={() => {
+                          setShowTagsModal(true);
+                          setShowMenu(false);
+                        }}
+                      >
+                        <LuTag size={16} className="text-primary-400" />
+                        Add Tags {tags.length > 0 && `(${tags.length})`}
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
 
             {isFetching ? (
               <div className="flex justify-center items-center h-80">
@@ -215,178 +382,208 @@ const PostEditModal = ({
               </div>
             ) : (
               <div className="h-[100%] flex-grow">
-                <textarea
-                  className={cn(
-                    'w-full resize-none p-2 mb-4 border-none outline-none h-80 bg-background',
-                    !isLoggedIn && 'cursor-not-allowed text-neutral-500'
-                  )}
-                  autoFocus
-                  placeholder={isLoggedIn ? "Edit your post..." : "Sign in to edit"}
-                  rows={15}
-                  value={postContent}
-                  onChange={handleTextChange}
-                  disabled={!isLoggedIn}
-                />
+                {/* Text area */}
+                <div className="flex flex-col items-center mb-6 relative">
+                  <div
+                    className="rounded-lg  relative overflow-hidden"
+                    style={{
+                      width: '95%',
+                      height: '344px',
+                      minHeight: '200px',
+                      borderRadius: '16px',
+                      maxWidth: '600px',
+                    }}
+                  >
+                    {/* Borders */}
+                    <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '1px', borderRadius: '16px 16px 0 0', background: 'repeating-linear-gradient(to right, #cccccc 0 30px, transparent 30px 60px)' }} />
+                    <div style={{ position: 'absolute', bottom: 0, left: 0, width: '100%', height: '1px', borderRadius: '0 0 16px 16px', background: 'repeating-linear-gradient(to right, #cccccc 0 30px, transparent 30px 60px)' }} />
+                    <div style={{ position: 'absolute', top: 0, left: 0, width: '1px', height: '100%', borderRadius: '16px 0 0 16px', background: 'repeating-linear-gradient(to bottom, #cccccc 0 30px, transparent 30px 60px)' }} />
+                    <div style={{ position: 'absolute', top: 0, right: 0, width: '1px', height: '100%', borderRadius: '0 16px 16px 0', background: 'repeating-linear-gradient(to bottom, #cccccc 0 30px, transparent 30px 60px)' }} />
+
+                    {/* Highlighted content */}
+                    <div
+                      ref={highlightRef}
+                      aria-hidden
+                      className="absolute inset-0 p-3 overflow-y-auto whitespace-pre-wrap break-words text-left text-base leading-relaxed pointer-events-none scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-200"
+                      dangerouslySetInnerHTML={{
+                        __html:
+                          postContent.length > 0
+                            ? buildHighlightedHtml(postContent)
+                            : !isFocused
+                            ? `<span class="text-neutral-500">${escapeHtml(isLoggedIn ? "Edit your post..." : "Sign in to edit")}</span>`
+                            : '',
+                      }}
+                    />
+
+                    <textarea
+                      ref={textareaRef}
+                      value={postContent}
+                      onChange={handleTextChange}
+                      onFocus={() => setIsFocused(true)}
+                      onBlur={() => setIsFocused(false)}
+                      onPaste={(e) => {
+                        // Handle paste events properly on mobile
+                        e.preventDefault();
+                        const pastedText = e.clipboardData.getData('text');
+                        if (pastedText) {
+                          setPostContent(prev => prev + pastedText);
+                        }
+                      }}
+                      onInput={(e) => {
+                        // Additional input handler for mobile compatibility
+                        const target = e.target as HTMLTextAreaElement;
+                        if (target.value !== postContent) {
+                          setPostContent(target.value);
+                        }
+                      }}
+                      className={cn(
+                        'absolute inset-0 w-full h-full resize-none bg-transparent p-3 text-base leading-relaxed outline-none z-10 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-500 scrollbar-track-gray-300',
+                        !isLoggedIn ? 'cursor-not-allowed' : '',
+                        'text-transparent caret-neutral-50'
+                      )}
+                      placeholder={''}
+                      disabled={!isLoggedIn}
+                      autoComplete="off"
+                      autoCorrect="off"
+                      autoCapitalize="off"
+                      spellCheck="false"
+                    />
+                  </div>
+                </div>
+                {/* Media Preview */}
                 {(existingMedia.length > 0 || postImages.length > 0 || postVideos.length > 0) && (
-                  <div className="display-media flex justify-start items-center overflow-x-auto gap-2 my-1 py-1 px-4 border-b border-t border-neutral-400">
+                  <div className="flex justify-start items-center overflow-x-auto gap-2 my-2 py-2 border-b border-t border-neutral-400">
                     {existingMedia.map((media, index) => (
-                      <div key={media.url} className="relative block h-32 w-32 aspect-w-1 aspect-h-1 flex-shrink-0">
+                      <div key={media.url} className="relative block h-28 w-28 flex-shrink-0">
                         {media.type === MediaType.Image ? (
-                          <img src={media.url} alt="existing post image" className="object-cover h-full w-auto" />
+                          <img src={media.url} alt="existing post image" className="object-cover h-full w-auto rounded" />
                         ) : (
-                          <video src={media.url} className="object-cover w-auto h-full" />
+                          <video src={media.url} className="object-cover w-auto h-full rounded" />
                         )}
-                        <button
-                          className="absolute top-0 right-0 bg-red-500 text-white rounded-full p-1"
+                        <div
+                          className="absolute top-0 right-0 bg-gray-400 rounded-full p-1 flex items-center justify-center cursor-pointer"
+                          style={{ width: 24, height: 24 }}
                           onClick={() => handleRemoveMedia(media.type === MediaType.Image ? 'image' : 'video', index, true)}
                         >
-                          <LuX className="size-3" />
-                        </button>
+                          <X size={16} strokeWidth={2} className="text-white" />
+                        </div>
                       </div>
                     ))}
                     {postImages.map((image, index) => (
-                      <div key={image.name} className="relative block h-32 w-32 aspect-w-1 aspect-h-1 flex-shrink-0">
-                        <img src={URL.createObjectURL(image)} alt="new post image" className="object-cover h-full w-auto" />
-                        <button
-                          className="absolute top-0 right-0 bg-red-500 text-white rounded-full p-1"
+                      <div key={image.name} className="relative block h-28 w-28 flex-shrink-0">
+                        <img src={URL.createObjectURL(image)} alt="new post image" className="object-cover h-full w-auto rounded" />
+                        <div
+                          className="absolute top-0 right-0 bg-gray-400 rounded-full p-1 flex items-center justify-center cursor-pointer"
+                          style={{ width: 24, height: 24 }}
                           onClick={() => handleRemoveMedia('image', index, false)}
                         >
-                          <LuX className="size-3" />
-                        </button>
+                          <X size={16} strokeWidth={2} className="text-white" />
+                        </div>
                       </div>
                     ))}
                     {postVideos.map((video, index) => (
-                      <div key={video.name} className="relative w-32 h-32 flex-shrink-0">
-                        <video src={URL.createObjectURL(video)} className="object-cover w-auto h-full" />
-                        <button
-                          className="absolute top-0 right-0 bg-red-500 text-white rounded-full p-1"
+                      <div key={video.name} className="relative w-28 h-28 flex-shrink-0">
+                        <video src={URL.createObjectURL(video)} className="object-cover w-auto h-full rounded" />
+                        <div
+                          className="absolute top-0 right-0 bg-gray-400 rounded-full p-1 flex items-center justify-center cursor-pointer"
+                          style={{ width: 24, height: 24 }}
                           onClick={() => handleRemoveMedia('video', index, false)}
                         >
-                          <LuX className="size-3" />
-                        </button>
+                          <X size={16} strokeWidth={2} className="text-white" />
+                        </div>
                       </div>
                     ))}
                   </div>
                 )}
 
-                <div className="actions flex flex-col justify-between items-start gap-3">
-                  <div className="relative">
-                    <button
-                      className={cn(
-                        'flex items-center justify-center border-none outline-none hover:text-primary-400 cursor-pointer',
-                        isEmojiPickerOpen && 'text-primary-400',
-                        !isLoggedIn && 'text-neutral-500 cursor-not-allowed hover:text-neutral-500'
-                      )}
-                      title="Add Emoji"
-                      onClick={handleEmojiClick}
-                      disabled={!isLoggedIn}
-                    >
-                      <LuSmile className="size-6" />
-                    </button>
-                    {isEmojiPickerOpen && isLoggedIn && (
-                      <Picker
-                        searchPlaceHolder={t('Search Emojis')}
-                        theme={theme === 'light' ? Theme.LIGHT : Theme.DARK}
-                        style={{ position: 'absolute', top: '100%', left: '0' }}
-                        onEmojiClick={(emojiData) => {
-                          if (postContent.length <= SHORT_POST_LENGTH) {
-                            setPostContent(postContent + emojiData.emoji);
-                          }
-                        }}
-                      />
+                {/* Emoji / Media / Character Count */}
+                <div className="w-[95%] max-w-[600px] mx-auto mt-6 flex justify-between items-center">
+                  <div className="flex items-center gap-4 md:gap-8">
+                    {/* Communique indicator */}
+                    {isCommunique && (
+                      <div className="flex items-center justify-center relative group">
+                        <Star 
+                          size={20} 
+                          className="text-secondary-400 fill-secondary-400" 
+                        />
+                        {/* Tooltip */}
+                        <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-background text-neutral-100 text-xs rounded shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap z-50">
+                          This post is now a communique
+                          <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-neutral-50"></div>
+                        </div>
+                      </div>
                     )}
+                    <div className="relative">
+                      <button
+                        className="flex items-center justify-center text-neutral-300 hover:text-neutral-50"
+                        title="Add Emoji"
+                        onClick={() => {
+                          if (handleActionBlocked('add an emoji')) return;
+                          handleEmojiClick();
+                        }}
+                      >
+                        <img src={smile} alt="Add Emoji" className="w-5 h-5" />
+                      </button>
+                      {isEmojiPickerOpen && isLoggedIn && (
+                        <div className="absolute z-50 top-full mt-2">
+                          <Picker
+                            searchPlaceHolder={t('Search Emojis')}
+                            theme={theme === 'light' ? Theme.LIGHT : Theme.DARK}
+                            onEmojiClick={(emojiData) => {
+                              setPostContent((prev) => prev + emojiData.emoji);
+                            }}
+                          />
+                        </div>
+                      )}
+                    </div>
+
+                    <label className="text-neutral-300 hover:text-neutral-50 cursor-pointer" title="Add Image">
+                      <img src={image} alt="Add Image" className="w-6 h-6" />
+                      <input type="file" accept="image/*" className="hidden" multiple onChange={onPickImage} />
+                    </label>
+
+                    <label className="text-neutral-300 hover:text-neutral-50 cursor-pointer" title="Add Video">
+                      <img src={video} alt="Add Video" className="w-5 h-5" />
+                      <input type="file" accept="video/*" className="hidden" multiple onChange={onPickVideo} />
+                    </label>
                   </div>
 
-                  <div className="additional__actions flex gap-4">
-                    <label
-                      className={cn(
-                        'hover:text-primary-400 cursor-pointer',
-                        !isLoggedIn && 'text-neutral-500 cursor-not-allowed hover:text-neutral-500'
-                      )}
-                      title="Add Image"
-                    >
-                      <LuImage className="size-6" />
-                      <input
-                        type="file"
-                        accept="image/*"
-                        className="hidden"
-                        multiple
-                        onChange={onPickImage}
-                        disabled={!isLoggedIn}
-                      />
-                    </label>
-                    <label
-                      className={cn(
-                        'hover:text-primary-400 cursor-pointer',
-                        !isLoggedIn && 'text-neutral-500 cursor-not-allowed hover:text-neutral-500'
-                      )}
-                      title="Add Video"
-                    >
-                      <LuVideo className="size-6" />
-                      <input
-                        type="file"
-                        accept="video/*"
-                        className="hidden"
-                        multiple
-                        onChange={onPickVideo}
-                        disabled={!isLoggedIn}
-                      />
-                    </label>
-                    <button
-                      className={cn(
-                        'hover:text-primary-400 cursor-pointer',
-                        !isLoggedIn && 'text-neutral-500 cursor-not-allowed hover:text-neutral-500'
-                      )}
-                      title="Add Event"
-                      onClick={() => handleActionBlocked('add an event')}
-                      disabled={!isLoggedIn}
-                    >
-                      <LuCalendar className="size-6" />
-                    </button>
-                    <button
-                      className={cn(
-                        'hover:text-primary-400 cursor-pointer',
-                        !isLoggedIn && 'text-neutral-500 cursor-not-allowed hover:text-neutral-500'
-                      )}
-                      title="Add Other"
-                      onClick={() => handleActionBlocked('add other content')}
-                      disabled={!isLoggedIn}
-                    >
-                      <LuPlus className="size-6" />
-                    </button>
-                  </div>
-                  <div className="mt-4 flex justify-end items-center gap-2 w-full">
-                    <span className="mr-3">
-                      <span className={cn('text-primary-400', postContent.length > SHORT_POST_LENGTH && 'text-red-500')}>
-                        {postContent.length}
-                      </span>
-                      /{SHORT_POST_LENGTH}
+                  <span className="text-sm font-medium">
+                    <span className={cn(postContent.length <= SHORT_POST_LENGTH ? 'text-primary-400' : 'text-red-500')}>
+                      {postContent.length}
                     </span>
-                    <Button
-                      className={cn(
-                        'flex items-center gap-2 hover:text-primary-400 cursor-pointer',
-                        !isLoggedIn && 'text-neutral-500 cursor-not-allowed hover:text-neutral-500'
-                      )}
-                      onClick={() => handleActionBlocked('schedule a post')}
-                      disabled={!isLoggedIn}
-                    >
-                      <LuCalendar className="size-6" />
-                    </Button>
-                    <Button
-                      className={cn(
-                        'inline-flex items-center gap-2 py-1.5 px-12 border-2 rounded-full text-sm/6 font-semibold shadow-inner shadow-white/10',
-                        isLoggedIn
-                          ? 'border-primary-400 hover:bg-primary-400 hover:text-background cursor-pointer'
-                          : 'border-neutral-500 text-neutral-500 cursor-not-allowed',
-                        'transition-all duration-300 ease-in-out'
-                      )}
-                      onClick={handleUpdatePost}
-                      disabled={isPending || !isLoggedIn}
-                    >
-                      {isPending && <LuLoader className="animate-spin size-4 inline-block mx-2" />}
-                      Update
-                    </Button>
-                  </div>
+                    <span className="text-plain-a">/{SHORT_POST_LENGTH} characters</span>
+                  </span>
+                </div>
+
+                {/* Update Button */}
+                <div className="flex justify-center mt-4">
+                  <button
+                    className={cn(
+                      'py-2 px-10 rounded-full font-semibold transition-all duration-300',
+                      postContent.length === 0 || postContent.length > SHORT_POST_LENGTH || isSubmitting || isPending
+                        ? 'border-2 border-neutral-400 text-neutral-300 cursor-not-allowed bg-neutral-600'
+                        : postContent.length >= 1000
+                        ? 'border-2 border-primary-400 bg-primary-400 text-white cursor-pointer'
+                        : postContent.length > 0
+                        ? 'border-2 border-primary-400 text-neutral-50 hover:bg-primary-400 hover:text-white cursor-pointer'
+                        : 'border-2 border-neutral-400 text-neutral-300 cursor-not-allowed'
+                    )}
+                    onClick={handleUpdatePost}
+                    disabled={postContent.length === 0 || postContent.length > SHORT_POST_LENGTH || isSubmitting || isPending}
+                  >
+                    {isSubmitting || isPending ? (
+                      <>
+                        <LuLoader className="animate-spin inline-block mr-2" />
+                        <span className="block">{t('Updating')}...</span>
+                      </>
+                    ) : (
+                      <>
+                        <span className="block md:hidden">{t('Update')}</span>
+                        <span className="hidden md:block">{t('Update Post')}</span>
+                      </>
+                    )}
+                  </button>
                 </div>
               </div>
             )}
@@ -401,6 +598,14 @@ const PostEditModal = ({
           onClose={() => setShowSignInPopup(null)}
         />
       )}
+
+      {/* Tags Modal */}
+      <TagsModal
+        isOpen={showTagsModal}
+        onClose={() => setShowTagsModal(false)}
+        onSave={handleSaveTags}
+        selectedTags={tags}
+      />
     </Dialog>
   );
 };

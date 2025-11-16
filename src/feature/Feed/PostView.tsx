@@ -3,7 +3,6 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { LuLoader, LuX } from 'react-icons/lu';
 import Topbar from '../../components/atoms/Topbar/Topbar';
 import { useGetArticleById } from '../Blog/hooks/useArticleHook';
-import { toast } from 'react-toastify';
 import './PostView.scss';
 import BlogPost2 from '../Blog/components/BlogPost2';
 
@@ -14,14 +13,25 @@ const PostView: React.FC = () => {
   const [isClosing, setIsClosing] = useState(false);
 
   const handleClose = () => {
+    if (isClosing) return; // Prevent multiple close attempts
+    
     setIsClosing(true);
-    setTimeout(() => navigate(-1), 300); // Match the animation duration
+    setTimeout(() => {
+      try {
+        // Navigate to home page instead of browser back
+        // This ensures users always land on the home page when closing shared links
+        navigate('/feed', { replace: true });
+      } catch (error) {
+        console.error('Navigation failed:', error);
+        // Fallback: try to navigate to root
+        window.location.href = '/feed';
+      }
+    }, 300); // Match the animation duration
   };
 
   useEffect(() => {
     if (isError) {
-      toast.error('Error fetching article.');
-      navigate('/feed');
+      navigate('/feed', { replace: true });
     }
   }, [isError, navigate]);
 
@@ -32,6 +42,18 @@ const PostView: React.FC = () => {
       document.body.style.overflow = 'auto';
     };
   }, []);
+
+  // Handle escape key to close modal
+  useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && !isClosing) {
+        handleClose();
+      }
+    };
+
+    document.addEventListener('keydown', handleEscape);
+    return () => document.removeEventListener('keydown', handleEscape);
+  }, [isClosing]);
 
   return (
     <div className={`post-view-container ${isClosing ? 'closing' : ''}`}>
@@ -50,7 +72,7 @@ const PostView: React.FC = () => {
           </button>
         </Topbar>
 
-        <div className="post-content-container">
+        <div className="post-content-container ">
           {isLoading ? (
             <div className="loading-container">
               <LuLoader className="animate-spin text-primary-400 text-2xl" />

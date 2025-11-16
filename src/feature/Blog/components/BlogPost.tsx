@@ -1,90 +1,67 @@
-import React, { useContext, useEffect, useState } from 'react';
-import { ErrorBoundary } from 'react-error-boundary';
-import ErrorFallback from '../../../components/molecules/ErrorFallback/ErrorFallback';
-import { CognitiveModeContext } from '../../../context/CognitiveMode/CognitiveModeContext';
+import { useEffect } from 'react';
 import { Article } from '../../../models/datamodels';
-import BlogArticleHeader from './BlogArticleHeader';
-import BlogImagery from './BlogComponents/BlogImagery';
-import BlogMessage from './BlogComponents/BlogMessage';
-import BlogProfile from './BlogComponents/BlogProfile';
-import BlogReactionSession from './BlogComponents/BlogReactionSession';
-import BlogReactionStats from './BlogComponents/BlogReactionStats';
 import { useUpdateArticle } from '../hooks/useArticleHook';
+import ArticleNormal from './BlogCardContainers/ArticleNormal';
+import PostNormal from './BlogCardContainers/PostNormal';
+import ArticleNormalCommentary from './BlogCardContainers/ArticleRepostCommentary';
+import ArticleNormalNoCommentary from './BlogCardContainers/ArticleRepostNoCommentary';
+import PostNormalCommentary from './BlogCardContainers/PostNormalCommentary';
+import PostNormalNoCommentary from './BlogCardContainers/PostNormalNoCommentary';
+
+
 
 interface BlogPostProps {
   article: Article;
 }
 
 const BlogPost: React.FC<BlogPostProps> = ({ article }) => {
-  const { isCognitiveMode } = useContext(CognitiveModeContext);
-  const [isCommentSectionOpen, setIsCommentSectionOpen] = useState<boolean>(false);
-    const {mutate} = useUpdateArticle()
 
-  const toggleCommentSection = () => {
-    setIsCommentSectionOpen(!isCommentSectionOpen);
-  };
-
-   useEffect(()=>{
+  const { mutate } = useUpdateArticle()
+  useEffect(() => {
     mutate({
-      articleId:article._id || '',
-      article:{
-        impression_count:article.impression_count! +1,
+      articleId: article._id || '',
+      article: {
+        impression_count: article.impression_count! + 1,
       }
     })
-  },[article,mutate])
+  }, [article, mutate])
 
   if (!article) {
     return <div>Empty Article</div>;
   }
 
- 
+  const isRepost = article.type === 'Repost';
+  const hasCommentary = isRepost && !!article.repost?.repost_comment;
 
   return (
     <div
-      className={`each_blog_post mt-5 shadow-sm p-2 max-w-[680px]  self-center w-full bg-background`}>
-      {article.isArticle && <BlogArticleHeader />}
-      <BlogProfile
-        title={article.title || ''}
-        user={article.author_id || {}}
-        content={article.content || ''}
-        date={article.createdAt || ''}
-        article_id={article._id || ''}
-        isArticle={article.isArticle || false}
-        article={article}
+      className={`self-center w-full`}>
+      {article.isArticle ? (
+        <>
+          {isRepost ? (
+            hasCommentary ? (
+              <ArticleNormalCommentary article={article} />
+            ) : (
+              <ArticleNormalNoCommentary article={article} />
+            )
+          ) : (
+            <ArticleNormal article={article} />
+          )}
+        </>
+      ) : (
+        <>
+          {isRepost ? (
+            hasCommentary ? (
+              <PostNormalCommentary article={article} />
+            ) : (
+              <PostNormalNoCommentary article={article} />
+            )
+          ) : (
+            <PostNormal article={article} />
+          )}
+        </>
+      )}
 
-      />
-      <BlogMessage
-        title={article.title || ''}
-        content={article.content || ''}
-        article_id={article._id || ''}
-        isArticle={article.isArticle || false}
-        slug={article.slug || ''}
-        article={article}
-      />
-      <ErrorBoundary
-        FallbackComponent={ErrorFallback}
-        onError={(error, info) => {
-          void error;
-          void info;
-        }}>
-        {!isCognitiveMode && article?.media && <BlogImagery article={article} media={article.media} />}
-      </ErrorBoundary>
-
-      <BlogReactionStats
-        toggleCommentSection={toggleCommentSection}
-        date={article.createdAt || ''}
-        article_id={article._id || ''}
-        article={article}
-      />
-      <BlogReactionSession
-        isCommentSectionOpen={isCommentSectionOpen}
-        message={article.content || ''}
-        article_id={article._id || ''}
-        setIsCommentSectionOpen={toggleCommentSection}
-        author_of_post={article.author_id || {}}
-        text_to_speech={article.text_to_speech || ''}
-        article={article}
-      />
     </div>
   );
 };

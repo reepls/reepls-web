@@ -9,20 +9,22 @@ function Welcome() {
  
 
   const navigateToSignIn = () => {
-    navigate("register/phone");
+    navigate("register/email");
   };
   const navigateToSignUp = () => {
-    navigate("login/phone");
+    navigate("login/email");
   };
   const navigateToFeed = () => {
     navigate("/feed");
   };
 
+
+
   return (
     <div className="welcome__container">
       <div className="welcome__text">{t("WelcomeMessage")}</div>
 
-      <div className="welcome__buttons p-8">
+      <div className="welcome__buttons">
         <button className="btn__sign-in bg-transparent border border-primary-400 text-primary-400  hover:shadow-sm hover:bg-primary-400" onClick={navigateToSignUp}>
           {t("SignInButton")}
         </button>
@@ -32,6 +34,8 @@ function Welcome() {
         <button className="btn__sign-up" onClick={navigateToSignIn}>
           {t("SignUpButton")}
         </button>
+        
+
       </div>
 
       <div className="welcome__link" onClick={navigateToFeed}>{t("ContinueWithoutSignIn")}</div>

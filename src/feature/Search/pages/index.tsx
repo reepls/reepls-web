@@ -1,4 +1,4 @@
-import React, { useContext, useEffect } from "react"; // Added useEffect
+import React, { useContext, useEffect } from "react";
 import { useGetSearchSuggestions } from "../hooks";
 import { useUser } from "../../../hooks/useUser";
 import Topbar from "../../../components/atoms/Topbar/Topbar";
@@ -7,52 +7,32 @@ import Communique from "../../Feed/components/Communique/Communique";
 import SuggestionContainer from "../components/SuggestionContainer";
 import { SearchContainerContext } from "../../../context/suggestionContainer/isSearchcontainer";
 import RecentSearchesSkeleton from "../components/RecentSearchComponent";
-import { toast } from "react-toastify"; // Added for toast notifications
+import { toast } from "react-toastify";
 import { useTranslation } from "react-i18next";
+import { getBackendErrorMessage } from "../../../utils/errorHandler";
+import MainContent from "../../../components/molecules/MainContent";
 
 const Search: React.FC = () => {
   const { authUser } = useUser();
-  const { data, isLoading, error } = useGetSearchSuggestions(authUser?.id || ""); // Added error
+  const { data, isLoading, error } = useGetSearchSuggestions(authUser?.id || "");
   const { isSearchContainerOpen } = useContext(SearchContainerContext);
-  
+  const { t } = useTranslation();
 
-  const {t} = useTranslation()
-
-  // Function to get friendly error messages specific to search suggestions
-  const getFriendlyErrorMessage = (error: any, query?: string): string => {
-    if (!error) return t("search.errors.default");
-  
-    if (error.message.includes("Network Error")) {
-      return t("search.errors.network");
-    }
-    if (error.response) {
-      const status = error.response.status;
-      if (status === 404) {
-        return t("search.errors.notFound", { query }); // Dynamic query
-      }
-      if (status === 500) {
-        return t("search.errors.server");
-      }
-      if (status === 429) {
-        return t("search.errors.rateLimit");
-      }
-    }
-    return t("search.errors.default");
-  };
-
-  // Toast error notification
   useEffect(() => {
     if (error) {
-      toast.error(getFriendlyErrorMessage(error));
+      const errorMessage = getBackendErrorMessage(error, t);
+      toast.error(errorMessage);
     }
-  }, [error]);
+  }, [error, t]);
 
   // Loading state
   if (isLoading) {
     return (
+      <MainContent> 
       <div className="lg:grid font-roboto grid-cols-[4fr_1.65fr] min-h-screen">
         <div className="search w-full lg:border-r-[1px] border-neutral-500">
           <Topbar>
+         
             <SearchTopBar />
           </Topbar>
           <div className="px-5 md:px-10 lg:px-20 w-full flex flex-col">
@@ -65,21 +45,24 @@ const Search: React.FC = () => {
           <Communique />
         </div>
       </div>
+      </MainContent>
     );
   }
 
   // Error state
   if (error) {
     return (
+      <MainContent> 
       <div className="lg:grid font-roboto grid-cols-[4fr_1.65fr] min-h-screen">
         <div className="search w-full lg:border-r-[1px] border-neutral-500">
           <Topbar>
+          
             <SearchTopBar />
           </Topbar>
           <div className="px-5 md:px-10 lg:px-20 w-full flex flex-col">
             <div className="recent space-y-4 mt-8">
               <p className="text-neutral-50 text-center py-8">
-                {getFriendlyErrorMessage(error)}
+                {error ? "An error occurred" : ""}
               </p>
             </div>
           </div>
@@ -88,14 +71,17 @@ const Search: React.FC = () => {
           <Communique />
         </div>
       </div>
+      </MainContent>
     );
   }
 
   // Success or empty state
   return (
+    <MainContent> 
     <div className="lg:grid font-roboto grid-cols-[4fr_1.65fr] min-h-screen">
       <div className="search w-full lg:border-r-[1px] border-neutral-500">
         <Topbar>
+       
           <SearchTopBar />
         </Topbar>
         
@@ -126,6 +112,7 @@ const Search: React.FC = () => {
         <Communique />
       </div>
     </div>
+    </MainContent>
   );
 };
 

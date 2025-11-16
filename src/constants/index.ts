@@ -44,7 +44,7 @@ const allowedVideoTypes = [
 ];
 
 // All about the api
-const API_BASE_URL = config.api.baseUrl;
+const API_BASE_URL = config.api.baseUrl||'https://reepls-api.onrender.com';
 const API_VERSION = config.api.version || '/api-v1';
 const API_URL = `${API_BASE_URL}${API_VERSION}`;
 
@@ -54,7 +54,6 @@ const REFRESH_TOKEN_KEY = 'RefreshToken';
 
 // Key for storing in localStorage
 const STORAGE_KEY = 'encryptedLoginData';
-
 export {
   ACCESS_TOKEN_KEY,
   allowedImageTypes,
@@ -71,3 +70,6 @@ export {
   SHORT_POST_LENGTH,
   STORAGE_KEY,
 };
+
+// Export version utilities
+export { getPlatformVersion, getVersionDisplayText, PLATFORM_VERSION } from './version';

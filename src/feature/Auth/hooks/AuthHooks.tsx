@@ -16,8 +16,13 @@ import {
   verifyPhoneCode,
   logoutUser,
   logOutWithGoogle,
+  forgotPassword,
+  verifyResetPasswordCode,
+  resetPassword,
+  checkGoogleAuthStatus,
 } from "../api";
 import { useTokenStorage } from './useTokenStorage';
+import { handleMutationError } from '../../../utils/mutationErrorHandler';
 
 
 // Hook for registering a user with email
@@ -28,31 +33,54 @@ export const useRegisterUser = () => {
   return useMutation({
     mutationFn: (user: User) => registerUser(user),
     onSuccess: (data: LoginResponse) => {
-      login(data); // Pass the full LoginResponse to encrypt and store
+      login(data); 
     },
     onError: (error) => {
-      void error;
-      return 'Error registering user';
+      handleMutationError(error);
     },
   });
 };
 
-// Hook for registering a user with Google
+// Hook for registering/logging in a user with Google - this initiates the OAuth flow
 export const useRegisterUserWithGoogle = () => {
+  // const navigate = useNavigate();
 
-  return useQuery({
-    queryKey: ['registerWithGoogle'],
-    queryFn: () => registerWithGoogle(),
-  
+  return useMutation({
+    mutationFn: () => registerWithGoogle(),
+    onSuccess: () => {
+      // The registerWithGoogle function handles the redirect to Google
+      // No need to navigate here as the user will be redirected
+    },
+    onError: (error) => {
+      handleMutationError(error);
+    },
   });
 };
-// Hook for registering a user with Google
-export const useLogOutUserWithGoogle = () => {
 
+// Hook for logging out a user with Google - this clears the Google session
+export const useLogOutUserWithGoogle = () => {
+  const { logout } = useContext(AuthContext);
+  const navigate = useNavigate();
+
+  return useMutation({
+    mutationFn: () => logOutWithGoogle(),
+    onSuccess: () => {
+      logout(); // Clear local auth state
+      navigate('/auth'); // Redirect to auth page
+    },
+    onError: (error) => {
+      handleMutationError(error);
+    },
+  });
+};
+
+// Hook for checking Google authentication status
+export const useCheckGoogleAuthStatus = () => {
   return useQuery({
-    queryKey: ['registerWithGoogle'],
-    queryFn: () => logOutWithGoogle(),
-  
+    queryKey: ['googleAuthStatus'],
+    queryFn: () => checkGoogleAuthStatus(),
+    retry: false,
+    refetchOnWindowFocus: false,
   });
 };
 
@@ -66,7 +94,7 @@ export const usePhoneRegisterUser = () => {
       login(data); // Pass the full LoginResponse to encrypt and store
     },
     onError: (error) => {
-      void error;
+      handleMutationError(error);
     },
   });
 };
@@ -110,7 +138,7 @@ export const useLoginUserWithPhone = () => {
       navigateToFeed();
     },
     onError: (error) => {
-      void error;
+      handleMutationError(error);
     },
   });
 };
@@ -129,7 +157,7 @@ export const useUpdateUser = () => {
       navigateToUserProfile();
     },
     onError: (error) => {
-      void error;
+      handleMutationError(error);
     },
   });
 };
@@ -139,7 +167,7 @@ export const useGetEmailCode = () => {
   return useMutation({
     mutationFn: (emailCode: EmailCode) => getEmailVerificationCode(emailCode),
     onError: (error) => {
-      void error;
+      handleMutationError(error);
     },
   });
 };
@@ -150,7 +178,7 @@ export const useVerifyEmailCode = () => {
   return useMutation({
     mutationFn: (codeVerify: CodeVerify) => verifyEmailCode(codeVerify),
     onError: (error) => {
-      void error;
+      handleMutationError(error);
     },
   });
 };
@@ -161,7 +189,7 @@ export const useGetPhoneCode = () => {
     mutationFn: (phoneCode: PhoneCode) => getPhoneVerificationCode(phoneCode),
    
     onError: (error) => {
-      void error;
+      handleMutationError(error);
     },
   });
 };
@@ -172,7 +200,7 @@ export const useVerifyPhoneCode = () => {
   return useMutation({
     mutationFn: (phoneVerify: PhoneVerify) => verifyPhoneCode(phoneVerify),
     onError: (error) => {
-      void error;
+      handleMutationError(error);
     },
   });
 };
@@ -197,40 +225,36 @@ export const useLogoutUser = (token: string) => {
   return useMutation({
     mutationFn: () => logoutUser(token), 
     onError: (error) => {
-      void error;
+      handleMutationError(error);
     },
   });
 };
 
-// // Hook for sending a forgot password email
-// export const useForgotPassword = () => {
+// Hook for sending a forgot password email
+export const useForgotPassword = () => {
 
-//   return useMutation({
-//     mutationFn: (email: string) => forgotPassword(email),
-//   });
-// };
+  return useMutation({
+    mutationFn: (email: string) => forgotPassword(email),
+  });
+};
 
-// // Hook for verifying reset password code
-// export const useVerifyResetPasswordCode = () => {
-//   const navigate = useNavigate();
+// Hook for verifying reset password code
+export const useVerifyResetPasswordCode = () => {
 
-//   const navigateToResetPassword = (email: string) => {
-//     navigate('/auth/reset-password/new', { state: { email } }); 
-//   };
 
-//   return useMutation({
-//     mutationFn: ({ code, email }: { code: string; email: string }) => 
-//       verifyResetPasswordCode(code, email),
+  return useMutation({
+    mutationFn: ({ code, email }: { code: string; email: string }) => 
+      verifyResetPasswordCode(code, email),
   
-//   });
-// };
+  });
+};
 
-// // Hook for resetting the password
-// export const useResetPassword = () => {
+// Hook for resetting the password
+export const useResetPassword = () => {
 
-//   return useMutation({
-//     mutationFn: ({ token, email, password }: { token: string; email: string; password: string }) => 
-//       resetPassword(token, email, password),
+  return useMutation({
+    mutationFn: ({ token, email, password }: { token: string; email: string; password: string }) => 
+      resetPassword(token, email, password),
 
-//   });
-// };
+  });
+};

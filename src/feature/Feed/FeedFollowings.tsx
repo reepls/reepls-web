@@ -1,7 +1,6 @@
-import React, { useContext, useEffect, useRef, useState } from 'react';
-import CognitiveModeIndicator from '../../components/atoms/CognitiveModeIndicator';
+import React, {  useEffect, useRef } from 'react';
 import Topbar from '../../components/atoms/Topbar/Topbar';
-import { CognitiveModeContext } from '../../context/CognitiveMode/CognitiveModeContext';
+import { t } from 'i18next';
 import { Article } from '../../models/datamodels';
 import BlogPost from '../Blog/components/BlogPost';
 import BlogSkeletonComponent from '../Blog/components/BlogSkeleton';
@@ -9,21 +8,22 @@ import { useGetFollowedArticles } from '../Blog/hooks/useArticleHook';
 import Communique from './components/Communique/Communique';
 import ToggleFeed from './components/ToogleFeed';
 import './feed.scss';
-import { t } from 'i18next';
+import MainContent from '../../components/molecules/MainContent';
+
 
 const FeedFollowing: React.FC = () => {
-  const [isBrainActive, setIsBrainActive] = useState<boolean>(false);
-  const { toggleCognitiveMode } = useContext(CognitiveModeContext);
+    // const [isBrainActive, setIsBrainActive] = useState<boolean>(false);
+    // const { toggleCognitiveMode } = useContext(CognitiveModeContext);
   const bottomRef = useRef<HTMLDivElement>(null); // Ref for the bottom
 
   // Fetch followed articles with infinite scrolling
   const { data, error, isLoading, fetchNextPage, hasNextPage, isFetchingNextPage } = useGetFollowedArticles();
 
-  // Handle cognitive mode toggle
-  const handleBrainClick = () => {
-    setIsBrainActive((prev) => !prev);
-    toggleCognitiveMode();
-  };
+  // // Handle cognitive mode toggle
+  // const handleBrainClick = () => {
+  //   setIsBrainActive((prev) => !prev);
+  //   toggleCognitiveMode();
+  // };
 
   // Auto-fetch next page when scrolling to the bottom
   useEffect(() => {
@@ -54,11 +54,16 @@ const FeedFollowing: React.FC = () => {
  
 
   // Function to get friendly error messages
-  const getFriendlyErrorMessage = (error: any): string => {
+  const getFriendlyErrorMessage = (error: { 
+    message?: string;
+    response?: {
+      status: number;
+    };
+  } | null) => {
     if (!error) return "Something went wrong. Please try again later.";
 
     // Handle common error cases
-    if (error.message.includes("Network Error")) {
+    if (error.message?.includes("Network Error")) {
       return "Oops! It looks like you're offline. Please check your internet connection and try again.";
     }
     if (error.response) {
@@ -74,20 +79,20 @@ const FeedFollowing: React.FC = () => {
       }
     }
 
-    // Default fallback for unhandled errors
-    return "Something unexpected popped up. We’re on it—please try again later!";
+  
   };
 
   // Check if there are no articles
   const hasNoArticles = !isLoading && (!data || data.pages.every((page) => page.articles.length === 0));
 
   return (
+    <MainContent>
     <div className={`lg:grid grid-cols-[4fr_1.65fr]`}>
       <div className="Feed__Posts min-h-screen lg:border-r-[1px] border-neutral-500">
         <Topbar>
-          <div className="px-3 flex justify-between items-center w-full">
+          <div className="lg:px-3 flex justify-between items-center w-full">
             <ToggleFeed />
-            <CognitiveModeIndicator isActive={isBrainActive} onClick={handleBrainClick} />
+            {/* <CognitiveModeIndicator isActive={isBrainActive} onClick={handleBrainClick} /> */}
           </div>
         </Topbar>
 
@@ -104,9 +109,9 @@ const FeedFollowing: React.FC = () => {
             </p>
           </div>
         ) : (
-          <div className="px-1 sm:px-8 w-[98%] sm:w-[90%] transition-all duration-300 ease-linear flex flex-col gap-7">
+            <div className="px-1 sm:px-8 w-[98%] sm:w-[90%] transition-all duration-300 ease-linear flex flex-col items-center gap-7">
             {data?.pages.map((page, i) => (
-              <div className="flex flex-col gap-7" key={i}>
+              <div className="flex flex-col items-center gap-7" key={i}>
                 {page.articles.map((article: Article) => (
                   <BlogPost key={article._id} article={article} />
                 ))}
@@ -117,7 +122,7 @@ const FeedFollowing: React.FC = () => {
 
         {/* Show loading skeletons while fetching next page */}
         {isFetchingNextPage && (
-          <div className="px-1 sm:px-8 w-[98%] sm:w-[90%] transition-all duration-300 ease-linear flex flex-col-reverse mt-4">
+          <div className="px-1 sm:px-8 w-[98%] sm:w-[90%] transition-all duration-300 ease-linear flex flex-col gap-7 py-6">
             <BlogSkeletonComponent />
             <BlogSkeletonComponent />
           </div>
@@ -138,6 +143,7 @@ const FeedFollowing: React.FC = () => {
         <Communique />
       </div>
     </div>
+    </MainContent>
   );
 };
 

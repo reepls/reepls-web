@@ -2,8 +2,8 @@ import React, { useState, useEffect } from "react";
 import { ThumbsUp, Edit, Trash2, EllipsisVertical, Send } from "lucide-react"; // Added Send
 import { LuBadgeCheck, LuLoader } from "react-icons/lu";
 import { timeAgo } from "../../../utils/dateFormater";
-import { User, ReactionReceived } from "../../../models/datamodels";
-import { useCreateCommentReaction, useGetCommentReactions } from "../../Interactions/hooks";
+import { User } from "../../../models/datamodels";
+import { useCreateReactionRepost, useGetAllReactionsForTarget } from "../../Repost/hooks/useRepost";
 import { useUser } from "../../../hooks/useUser";
 import { useDeleteComment, useUpdateComment } from "../hooks"; // Added useUpdateComment
 import { toast } from "react-toastify";
@@ -31,25 +31,32 @@ const CommentMessageLevel2: React.FC<MessageComponentProps> = ({
   const [showMenu, setShowMenu] = useState(false);
   const [isEditing, setIsEditing] = useState(false); // State for edit mode
   const [editedContent, setEditedContent] = useState(content); // State for input value
-  const { mutate: createReaction, isPending, isSuccess } = useCreateCommentReaction();
-  const { data: reactions } = useGetCommentReactions(comment_id);
+  // Align with CommentMessage: use target-based reaction hooks
+  const target_type = "Comment" as const;
+  const target_id = comment_id;
+  const { mutate: createReactionRepost, isPending } = useCreateReactionRepost();
+  const { data: reactionsData } = useGetAllReactionsForTarget(target_type, target_id);
   const { mutate: deleteComment, isPending: isDeletePending } = useDeleteComment();
   const { mutate: updateComment, isPending: isUpdatePending } = useUpdateComment(); // Added update hook
   const { authUser } = useUser();
   const {goToProfile} = useRoute()
+  // Track pending state for animation
+  const [pendingUserAction, setPendingUserAction] = useState<null | 'like'>(null);
 
   useEffect(() => {
-    if (reactions?.reactions && Array.isArray(reactions.reactions)) {
-      const userIds = reactions.reactions.map((reaction: ReactionReceived) =>
-        reaction.user_id.id?.trim()
-      );
-      setReactedids(userIds);
+    const list = reactionsData?.data?.reactions;
+    if (Array.isArray(list)) {
+      const userIds = list
+        .map((reaction: { user_id: string }) => reaction.user_id?.trim?.() || reaction.user_id)
+        .filter(Boolean);
+      setReactedids(userIds as string[]);
     }
-  }, [reactions]);
+  }, [reactionsData]);
 
   // Check if the current user has reacted
   const hasUserReacted = authUser?.id ? reactedid.includes(authUser.id) : false;
-  const reactionCount = reactions?.reactions?.length || 0;
+  const reactionCount = reactionsData?.data?.totalReactions || 0;
+  // Only animate while loading; do not update visuals until settled.
 
   const formatDate = () => {
     try {
@@ -67,10 +74,15 @@ const CommentMessageLevel2: React.FC<MessageComponentProps> = ({
 
   const handleReact = () => {
     if (!authUser?.id) return;
-    createReaction({
+    setPendingUserAction('like');
+    createReactionRepost({
+      target_id: comment_id,
+      target_type: "Comment",
       type: "like",
-      user_id: authUser.id,
-      comment_id: comment_id,
+    },{
+      onSettled: () => {
+        setPendingUserAction(null);
+      },
     });
   };
 
@@ -115,127 +127,145 @@ const CommentMessageLevel2: React.FC<MessageComponentProps> = ({
 
   return (
     <div
-      className={`min-w-[88%] max-w-[90%] p-2 relative self-end ${
+      className={`min-w-[88%] max-w-[90%] p-2 relative self-end overflow-visible ${
         isSameAuthorAsPrevious ? "self-end" : ""
       }`}
     >
       <div className="bg-neutral-700 p-3 relative rounded-xl shadow-sm inline-block w-full">
-  <div className="flex items-center gap-2">
-    {/* Avatar - Now with conditional profile image */}
-    {author?.profile_picture ? (
-      <img
-        src={author.profile_picture}
-        alt={author.username}
-        className="size-6 rounded-full object-cover"
-        onClick={handleProfileClick}
-      />
-    ) : (
-      <div onClick={handleProfileClick} className="size-6 rounded-full bg-purple-500 flex items-center justify-center text-white font-bold text-[13px]">
-        {author?.username?.charAt(0)}
-      </div>
-    )}
-
-    {/* User Details */}
-    <div className="flex-1">
-      <div className="font-semibold flex items-center justify-between text-neutral-50 text-[14px]">
-        <div className="flex items-center gap-2 cursor-pointer hover:underline" onClick={handleProfileClick}>
-          {author?.username}
-          {author?.is_verified_writer && (
-            <LuBadgeCheck
-              className="text-primary-500 size-4"
-              strokeWidth={2.5}
+        <div className="flex items-start gap-2">
+          {/* Avatar */}
+          {author?.profile_picture ? (
+            <img
+              src={author.profile_picture}
+              alt={author.username}
+              className="size-6 rounded-full object-cover flex-shrink-0 cursor-pointer"
+              onClick={handleProfileClick}
             />
-          )}
-          {isAuthor && (
-            <div className="px-2 bg-secondary-400 text-[12px] text-plain-b rounded">
-              Author
+          ) : (
+            <div 
+              onClick={handleProfileClick} 
+              className="size-6 rounded-full bg-purple-500 flex items-center justify-center text-white font-bold text-[10px] flex-shrink-0 cursor-pointer"
+            >
+              {author?.username?.charAt(0)?.toUpperCase()}
             </div>
           )}
-        </div>
-        <div className="absolute right-2 text-[12px] font-light flex items-center gap-2">
-          {formatDate()}
+
+          {/* User Details - Properly separated */}
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 mb-1">
+              <span 
+                className="font-semibold text-neutral-50 text-[13px] truncate cursor-pointer hover:underline" 
+                onClick={handleProfileClick}
+              >
+                {author?.username}
+              </span>
+              {author?.is_verified_writer && (
+                <LuBadgeCheck className="text-primary-500 size-3.5 flex-shrink-0" strokeWidth={2.5} />
+              )}
+              {isAuthor && (
+                <span className="px-1.5 py-0.5 bg-secondary-400 text-[11px] text-plain-b rounded flex-shrink-0">
+                  Author
+                </span>
+              )}
+              <span className="text-[11px] text-neutral-400 font-light whitespace-nowrap">
+                {formatDate()}
+              </span>
+            </div>
+            {author?.title && (
+              <p className="text-[11px] text-neutral-500 truncate">{author?.title}</p>
+            )}
+          </div>
+
+          {/* Menu Button */}
           {isAuthAuthor && (
-            <EllipsisVertical
-              className="size-4 rotate-90 cursor-pointer text-neutral-50 hover:text-primary-400"
+            <button
+              className="ml-2 p-1 rounded-full hover:bg-neutral-600 transition-colors flex-shrink-0"
               onClick={() => setShowMenu(!showMenu)}
+              aria-label="Comment options"
+            >
+              <EllipsisVertical className="size-4 rotate-90 cursor-pointer text-neutral-50 hover:text-primary-400" />
+            </button>
+          )}
+        </div>
+
+        {/* Message Content */}
+        {isEditing ? (
+          <div className="mt-2 mb-1 flex items-center gap-2">
+            <input
+              type="text"
+              value={editedContent}
+              onChange={(e) => setEditedContent(e.target.value)}
+              className="w-full bg-transparent text-neutral-50 text-[13px] outline-none caret-white px-2"
+              autoFocus
             />
-          )}
-        </div>
-      </div>
-      <p className="text-[12px] text-gray-500">{author?.title}</p>
-    </div>
-  </div>
-
-  {/* Message Content */}
-  {isEditing ? (
-    <div className="mt-2 mb-1 flex items-center gap-2">
-      <input
-        type="text"
-        value={editedContent}
-        onChange={(e) => setEditedContent(e.target.value)}
-        className="w-full bg-transparent text-neutral-50 text-[13px] outline-none caret-white"
-        autoFocus
-      />
-      <button onClick={handleUpdateClick} disabled={isUpdatePending}>
-        {isUpdatePending ? (
-          <LuLoader className="animate-spin text-foreground inline-block size-4" />
+            <button onClick={handleUpdateClick} disabled={isUpdatePending} className="p-1 hover:bg-neutral-600 rounded transition-colors">
+              {isUpdatePending ? (
+                <LuLoader className="animate-spin text-foreground inline-block size-4" />
+              ) : (
+                <Send size={16} className="text-neutral-50 hover:text-primary-400" />
+              )}
+            </button>
+          </div>
         ) : (
-          <Send size={18} className="text-neutral-50 hover:text-primary-400" />
+          <p className="mt-2 mb-1 text-neutral-50 text-[13px] leading-relaxed">{content}</p>
         )}
-      </button>
-    </div>
-  ) : (
-    <p className="mt-2 mb-1 text-neutral-50 text-[13px]">{content}</p>
-  )}
 
-  {/* Popup Menu */}
-  {showMenu && (
-    <>
-      <div
-        className="fixed inset-0 bg-black opacity-0 z-40"
-        onClick={() => setShowMenu(false)}
-      ></div>
-      <div className="absolute right-2 top-8 bg-neutral-800 shadow-md rounded-md p-2 w-40 text-neutral-50 z-50">
-        <div
-          className="flex items-center gap-2 px-4 py-2 hover:bg-neutral-700 cursor-pointer"
-          onClick={handleEditClick}
-        >
-          <Edit size={18} className="text-neutral-500" />
-          <div>Edit</div>
-        </div>
-        <div
-          className="flex items-center gap-2 px-4 py-2 hover:bg-neutral-700 cursor-pointer text-red-500"
-          onClick={handleDeleteClick}
-        >
-          {isDeletePending ? (
-            <LuLoader className="animate-spin text-foreground inline-block size-4" />
-          ) : (
-            <Trash2 size={18} className="text-red-500" />
-          )}
-          <div>{isDeletePending ? "Deleting..." : "Delete"}</div>
-        </div>
-      </div>
-    </>
-  )}
-</div>
+        {/* Popup Menu */}
+        {showMenu && (
+          <>
+            <div
+              className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40"
+              onClick={() => setShowMenu(false)}
+            />
+            <div className="absolute right-2 top-12 bg-neutral-800/95 backdrop-blur-md shadow-2xl rounded-lg p-2 w-40 text-neutral-50 z-50 border border-neutral-600/50">
+              <div
+                className="flex items-center gap-2 px-3 py-2 hover:bg-neutral-700/50 cursor-pointer rounded transition-colors"
+                onClick={handleEditClick}
+              >
+                <Edit size={16} className="text-neutral-100" />
+                <span className="text-sm">Edit</span>
+              </div>
+              <div
+                className="flex items-center gap-2 px-3 py-2 hover:bg-red-500/20 cursor-pointer rounded transition-colors"
+                onClick={handleDeleteClick}
+              >
+                {isDeletePending ? (
+                  <LuLoader className="animate-spin inline-block size-4" />
+                ) : (
+                  <Trash2 size={16} className="text-red-400" />
+                )}
+                <span className="text-sm">{isDeletePending ? "Deleting..." : "Delete"}</span>
+              </div>
+            </div>
+          </>
+        )}
 
-      {/* Actions (React) */}
-      <div className="flex gap-4 mt-2 text-gray-600 text-[11px] px-4">
-        <div className="flex items-center gap-1">
-          <ThumbsUp
-            onClick={handleReact}
-            className={`size-4 hover:text-primary-400 hover:cursor-pointer ${
-              hasUserReacted || isSuccess
-                ? "fill-primary-400 text-primary-400"
-                : ""
+        {/* Actions (React) */}
+        <div className="flex gap-4 mt-3 text-neutral-400 text-[11px]">
+          <button
+            className={`flex items-center gap-1 hover:text-primary-400 transition-colors ${
+              hasUserReacted ? "text-primary-400" : ""
             }`}
-          />
-          {isPending ? (
-            <LuLoader className="animate-spin text-primary-400 inline-block mx-1" />
-          ) : (
-            "React"
-          )}{" "}
-          <span>• {reactionCount}</span>
+            onClick={handleReact}
+            disabled={isPending}
+          >
+            <span className={
+              pendingUserAction && isPending
+                ? "animate-bounce"
+                : ""
+            }>
+              <ThumbsUp className="size-4" />
+            </span>
+            {isPending ? (
+              <LuLoader className="animate-spin inline-block size-3" />
+            ) : (
+              <span>React</span>
+            )}
+            {/* Show updated count from cache only after mutation settles */}
+            {reactionCount > 0 && !isPending && (
+              <span className="ml-1">• {reactionCount}</span>
+            )}
+          </button>
         </div>
       </div>
     </div>

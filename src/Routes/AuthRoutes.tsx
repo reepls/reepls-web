@@ -4,12 +4,13 @@ import Registerwithemail from "../feature/Auth/pages/EmailRegistration/Registerw
 import RegisterWithEmail1 from "../feature/Auth/pages/EmailRegistration/RegisterWithEmail1";
 import RegisterWithEmail2 from "../feature/Auth/pages/EmailRegistration/RegisterWithEmail2";
 import Interests from "../feature/Auth/pages/Interests";
-import Login from "../feature/Auth/pages/Login";
+import ForgotPassword from "../feature/Auth/pages/ForgotPassword/ForgotPassword";
+import VerifyResetCode from "../feature/Auth/pages/ForgotPassword/VerifyResetCode";
+import ResetPassword from "../feature/Auth/pages/ForgotPassword/ResetPassword";
+import GoogleAuthCallback from "../feature/Auth/pages/GoogleAuthCallback";
+
 import Loginwithemail from "../feature/Auth/pages/Loginwithemail";
-import Checkphone from "../feature/Auth/pages/PhoneRegistration/Checkphone";
-import Registerwithphone0 from "../feature/Auth/pages/PhoneRegistration/Registerwithphone0";
-import RegisterWithPhone1 from "../feature/Auth/pages/PhoneRegistration/RegisterWithPhone1";
-import RegisterWithPhone2 from "../feature/Auth/pages/PhoneRegistration/RegisterWithPhone2";
+
 import Welcome from "../feature/Auth/pages/Welcome";
 
 
@@ -23,7 +24,7 @@ const AuthRoutes =  {
       },
       {
         path: "login/phone",
-        element: <Login/>,
+        element: <Loginwithemail />,
       },
       {
         path: "login/email",
@@ -31,15 +32,15 @@ const AuthRoutes =  {
       },
       {
         path: "register/phone",
-        element: <Registerwithphone0 />,
+        element: <Registerwithemail />,
       },
       {
         path: "register/phone/one",
-        element: <RegisterWithPhone1 />,
+        element: <RegisterWithEmail1 />,
       },
       {
         path: "register/phone/two",
-        element: <RegisterWithPhone2 />,
+        element: <RegisterWithEmail2 />,
       },
       {
         path: "register/email",
@@ -59,11 +60,27 @@ const AuthRoutes =  {
       },
       {
         path: "register/checkphone",
-        element: <Checkphone />,
+        element: <Checkemail />,
       },
       {
         path: "interests",
         element: <Interests />,
+      },
+      {
+        path: "forgot-password",
+        element: <ForgotPassword />,
+      },
+      {
+        path: "verify-reset-code",
+        element: <VerifyResetCode />,
+      },
+      {
+        path: "reset-password",
+        element: <ResetPassword />,
+      },
+      {
+        path: "google/callback",
+        element: <GoogleAuthCallback />,
       },
     ],
   }

@@ -10,9 +10,10 @@ import heroImage from './HEROIMAGE.svg'
 import Logo from './Logo.svg'
 import ellipse from './Ellipse.png'
 import reeplspng from './Reeples.png'
-import logo from '../../../public/LogoDark.svg'
+import logo from './LogoDark.svg'
 import imagePlaceholder from './profileimageplacehloder.png'
 import bannerPlaceholder from './bannerPlaceholder.jpg'
+import podcastimg from './podcast.png'
 
 
 export const Pics = {
@@ -31,4 +32,5 @@ export const Pics = {
     logo,
     imagePlaceholder,
     bannerPlaceholder,
+    podcastimg
 }

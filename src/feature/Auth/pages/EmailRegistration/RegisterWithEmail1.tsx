@@ -2,9 +2,9 @@ import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { LuLoader } from 'react-icons/lu';
 import { useSelector } from 'react-redux';
-import { toast } from 'react-toastify';
 import { RootState } from '../../../../store';
 import { validatePassword } from '../../../../utils/validatePassword';
+import { useAuthErrorHandler } from '../../../../utils/errorHandler';
 import InputField from '../../components/InputField';
 import { useRegisterUser } from '../../hooks/AuthHooks';
 import { useStoreCredential } from '../../hooks/useStoreCredential';
@@ -16,58 +16,49 @@ function RegisterWithEmail1() {
   const { mutate, isPending, error } = useRegisterUser();
   const navigate = useNavigate();
 
-  const { email, username } = useSelector((state: RootState) => state.user);
+  const { email, username, password } = useSelector((state: RootState) => state.user);
 
   // Custom hooks
   const { storePassword } = useStoreCredential();
+  const getErrorMessage = useAuthErrorHandler('register');
 
   // States
   const [passwords, setPassword] = useState<string>('');
   const [passwordInputError, setPasswordInputError] = useState<boolean>(false);
+  const [shouldShowVerifyButton, setShouldShowVerifyButton] = useState<boolean>(false);
 
-  // Function to get friendly error messages specific to email registration
-  const getFriendlyErrorMessage = (error: any): string => {
-    if (!error) return t('authErrors.generic', { defaultValue: "Something went wrong. Please try again." });
-  
-    // Handle network errors
-    if (error.message.includes("Network Error")) {
-      return t('authErrors.network', { defaultValue: "No internet connection. Check and retry." });
+  // Initialize form with stored data
+  useEffect(() => {
+    if (password) {
+      setPassword(password);
     }
-  
-    // Handle API response errors
-    if (error.response?.status) {
-      const status = error.response.status;
-      const errorKey = `authErrors.signupWithEmail.${status}`;
-      
-      // Default messages mapped to status codes
-      const defaultMessages: Record<number, string> = {
-        400: "Invalid email format. Check and retry.",
-        409: "Email already registered. Log in instead.",
-        429: "Too many sign-ups. Wait and retry.",
-        500: "Server error. Please try later."
-      };
-  
-      return t(errorKey, { 
-        defaultValue: defaultMessages[status] || t('authErrors.generic') 
-      });
-    }
-  
-    // Fallback for unhandled errors
-    return t('authErrors.generic');
-  };
+  }, [password]);
 
-  // Toast error notification
+  // Check for unverified email error
   useEffect(() => {
     if (error) {
-      toast.error(getFriendlyErrorMessage(error));
+      const errorMessage = getErrorMessage(error);
+      
+      // Check if error message indicates user exists but email not verified
+      if (errorMessage.includes('User exist but email not verified so verify to continue') || 
+          errorMessage.toLowerCase().includes('email not verified')) {
+        setShouldShowVerifyButton(true);
+      } else {
+        setShouldShowVerifyButton(false);
+      }
     }
-  }, [error]);
+  }, [error, getErrorMessage]);
 
   // Functions to handle DOM events
   const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const passwordValue = e.target.value;
     setPassword(passwordValue);
     storePassword(passwordValue);
+
+    // Reset verify button state when user changes password
+    if (shouldShowVerifyButton) {
+      setShouldShowVerifyButton(false);
+    }
 
     if (validatePassword(passwordValue) || passwordValue === '') {
       setPasswordInputError(false);
@@ -82,8 +73,15 @@ function RegisterWithEmail1() {
     }
   };
 
+
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+
+    // If we're in verify mode, navigate to verification page
+    if (shouldShowVerifyButton) {
+      navigate("/auth/register/checkemail", { state: { email } });
+      return;
+    }
 
     if (!validatePassword(passwords)) {
       setPasswordInputError(true);
@@ -99,6 +97,16 @@ function RegisterWithEmail1() {
       {
         onSuccess: () => {
           navigate("/auth/register/checkemail", { state: { email } });
+        },
+        onError: (error: unknown) => {
+          const errorMessage = getErrorMessage(error);
+          console.log("Error message:", errorMessage);
+          
+          // Check if this is the unverified email error
+          if (errorMessage.includes('User exist but email not verified so verify to continue') || 
+              errorMessage.toLowerCase().includes('email not verified')) {
+            setShouldShowVerifyButton(true);
+          }
         }
       }
     );
@@ -125,12 +133,12 @@ function RegisterWithEmail1() {
         </div>
         {error && (
           <div className="text-red-500 text-center py-2">
-            {getFriendlyErrorMessage(error)}
+            {getErrorMessage(error)}
           </div>
         )}
         <button type="submit" disabled={isPending}>
           {isPending && <LuLoader className="animate-spin inline-block mx-4" />}
-          {t('ContinueButton')}
+          {shouldShowVerifyButton ? t('ContinueToVerify', { defaultValue: 'Continue to Verify' }) : t('ContinueButton')}
         </button>
       </form>
     </div>

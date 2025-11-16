@@ -12,6 +12,7 @@ import {
   getCommentReactions,
 } from "../api";
 import { Reaction } from "../../../models/datamodels";
+import { handleMutationError } from "../../../utils/mutationErrorHandler";
 
 // Reactions Hooks
 export const useCreateReaction = () => {
@@ -32,7 +33,7 @@ export const useCreateReaction = () => {
       });
     },
     onError: (error) => {
-      void error;
+      handleMutationError(error);
     },
   });
 };
@@ -41,6 +42,10 @@ export const useGetReactionById = (reactionId: string) => {
   return useQuery({
     queryKey: ["reaction", reactionId],
     queryFn: () => getReactionById(reactionId),
+    staleTime: 10 * 60 * 1000, // 10 minutes
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    enabled: !!reactionId,
   });
 };
 
@@ -52,9 +57,12 @@ export const useUpdateReaction = () => {
       updateReaction(reactionId, type),
     onSuccess: () => {
       // Invalidate queries that might be affected by the update of a reaction
-      queryClient.invalidateQueries({
-        queryKey: ["reaction"],
-      });
+              queryClient.invalidateQueries({
+                queryKey: ["reaction"],
+              });
+              queryClient.invalidateQueries({
+                queryKey: ["reactions"],
+              });
       queryClient.invalidateQueries({
         queryKey: ["articleReactions"],
       });
@@ -66,7 +74,7 @@ export const useUpdateReaction = () => {
       });
     },
     onError: (error) => {
-      void error;
+      handleMutationError(error);
     },
   });
 };
@@ -79,18 +87,13 @@ export const useDeleteReaction = () => {
     onSuccess: () => {
       // Invalidate queries that might be affected by the deletion of a reaction
       queryClient.invalidateQueries({ queryKey: ["reaction"] });
-      queryClient.invalidateQueries({
-        queryKey: ["articleReactions"],
-      });
-      queryClient.invalidateQueries({
-        queryKey: ["reactionsPerType"],
-      });
-      queryClient.invalidateQueries({
-        queryKey: ["reactedUsers"],
-      });
+      queryClient.invalidateQueries({ queryKey: ["reactions"] });
+      queryClient.invalidateQueries({queryKey: ["articleReactions"]});
+      queryClient.invalidateQueries({queryKey: ["reactionsPerType"]});
+      queryClient.invalidateQueries({queryKey: ["reactedUsers"]});
     },
     onError: (error) => {
-      void error;
+      handleMutationError(error);
     },
   });
 };
@@ -99,6 +102,10 @@ export const useGetAuthorScoresByCategory = (category: string) => {
   return useQuery({
     queryKey: ["authorScores", category],
     queryFn: () => getAuthorScoresByCategory(category),
+    staleTime: 30 * 60 * 1000, // 30 minutes
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    enabled: !!category,
   });
 };
 
@@ -106,20 +113,32 @@ export const useGetReactedUsers = (articleId: string) => {
   return useQuery({
     queryKey: ["reactedUsers", articleId],
     queryFn: () => getReactedUsers(articleId),
+    staleTime: 10 * 60 * 1000, // 10 minutes
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    enabled: !!articleId,
   });
 };
 
 export const useGetArticleReactions = (articleId: string) => {
   return useQuery({
-    queryKey: ["articleReactions", articleId],
+    queryKey: ["articleReactions"],
     queryFn: () => getArticleReactions(articleId),
+    staleTime: 10 * 60 * 1000, // 10 minutes
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    enabled: !!articleId,
   });
 };
 
 export const useGetReactionsPerType = (articleId: string) => {
   return useQuery({
-    queryKey: ["reactionsPerType", articleId],
+    queryKey: ["reactionsPerType"],
     queryFn: () => getReactionsPerType(articleId),
+    staleTime: 10 * 60 * 1000, // 10 minutes
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    enabled: !!articleId,
   });
 };
 
@@ -137,7 +156,7 @@ export const useCreateCommentReaction = () => {
       });
     },
     onError: (error) => {
-      void error;
+      handleMutationError(error);
     },
   });
 };
@@ -145,8 +164,11 @@ export const useCreateCommentReaction = () => {
 // Hook to fetch all reactions of a comment
 export const useGetCommentReactions = (commentId: string) => {
   return useQuery({
-    queryKey: ["commentReactions", commentId],
+    queryKey: ["commentReactions"],
     queryFn: () => getCommentReactions(commentId),
+    staleTime: 10 * 60 * 1000, // 10 minutes
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
     enabled: !!commentId, 
   });
 };

@@ -22,13 +22,13 @@ const SearchAll: React.FC<SearchAllProps> = ({ query }) => {
   const { t } = useTranslation();
 
   // Function to get friendly error messages specific to search results
-  const getFriendlyErrorMessage = (error: any, query?: string): string => {
+  const getFriendlyErrorMessage = (error: Error | { response?: { status: number }, message: string }, query?: string): string => {
     if (!error) return t("search.errors.default");
   
     if (error.message.includes("Network Error")) {
       return t("search.errors.network");
     }
-    if (error.response) {
+    if ('response' in error && error.response) {
       const status = error.response.status;
       if (status === 404) {
         return t("search.errors.notFound", { query });
@@ -53,7 +53,7 @@ const SearchAll: React.FC<SearchAllProps> = ({ query }) => {
 
 
   // Function to determine the type of each result
-  const getResultType = (item: any): SearchResultItem => {
+  const getResultType = (item:any): SearchResultItem => {
     if (item.type === 'user') {
       return { type: 'user', data: item as User };
     } else {
@@ -90,23 +90,22 @@ const SearchAll: React.FC<SearchAllProps> = ({ query }) => {
   // Success or empty state
   return (
     <div className="search-all">
-      {results?.length > 0 ? (
+      {(results?.length || 0) > 0 ? (
         <div className="px-1 sm:px-8 max-w-[680px] transition-all duration-300 ease-linear flex flex-col gap-7">
-          {results.map((item: any, index: number) => {
+          {(results || []).map((item: User | Article, index: number) => {
             const result = getResultType(item);
             
             if (result.type === 'user') {
               const user = result.data as User;
               return (
                 <AuthorComponent
-                  key={`${user._id}-${index}`}
+                  key={`${user._id || user.id || index}-${index}`}
                   username={user.username || ''}
-                  // Add any other props needed by AuthorComponent
                 />
               );
             } else {
               const article = result.data as Article;
-              return <BlogPost key={article._id} article={article} />;
+              return <BlogPost key={article._id || article.id || index} article={article} />;
             }
           })}
         </div>

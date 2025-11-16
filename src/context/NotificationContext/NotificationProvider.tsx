@@ -12,27 +12,36 @@ const NotificationProvider: React.FC<NotificationProviderProps> = ({ children })
   const [notifications, setNotifications] = useState<Notification[]>([]);
   // const { authUser } = useUser();
 
-  // Fetch notifications on mount and every 2 minutes
-  const { data, refetch } = useFetchUserNotifications();
+  // Fetch notifications on mount
+  const { data } = useFetchUserNotifications();
 
   useEffect(() => {
-    if (data) {  
-      setNotifications(data.notifications);
+    // Ensure notifications is always an array before sorting
+    const notificationArray = Array.isArray(data?.notifications) ? data.notifications : [];
+    if (notificationArray.length > 0) {
+      // Sort notifications by created_at date with newest first
+      const sortedNotifications = notificationArray.sort((a: any, b: any) => {
+        const dateA = new Date(a.created_at).getTime();
+        const dateB = new Date(b.created_at).getTime();
+        return dateB - dateA; // Newest first (descending order)
+      });
+      setNotifications(sortedNotifications);
+    } else {
+      setNotifications([]);
     }
   }, [data]);
 
-  useEffect(() => {
-    const interval = setInterval(() => {
-      refetch(); 
-    }, 2 * 60 * 1000); 
-
-    // Cleanup interval on unmount
-    return () => clearInterval(interval);
-  }, [refetch]);
-
   // Add a new notification (if needed for other purposes)
   const addNotification = (notification: Notification) => {
-    setNotifications((prev) => [notification, ...prev]);
+    setNotifications((prev) => {
+      const updated = [notification, ...prev];
+      // Sort to maintain newest first order
+      return updated.sort((a, b) => {
+        const dateA = new Date(a.created_at).getTime();
+        const dateB = new Date(b.created_at).getTime();
+        return dateB - dateA; // Newest first (descending order)
+      });
+    });
   };
 
   // // Socket.IO for real-time notifications

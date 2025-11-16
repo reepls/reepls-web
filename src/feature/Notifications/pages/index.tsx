@@ -9,16 +9,29 @@ import CommentNotificationContainer from '../components/CommentNotificationConta
 import ReactionNotificationContainer from '../components/ReactionNotificationContainer';
 import { timeAgo } from '../../../utils/dateFormater';
 import { FiBell } from 'react-icons/fi'; 
+import { useNavigate } from 'react-router-dom';
+import { LuArrowLeft } from 'react-icons/lu';
+import MainContent from '../../../components/molecules/MainContent';
 
 const Notifications: React.FC = () => {
   const { notifications } = useNotificationsValues();
   const { t } = useTranslation();
+  const navigate = useNavigate();
 
+  console.log("notifications", notifications);
   return (
+    <MainContent> 
     <div className={`lg:grid grid-cols-[4fr_1.65fr]`}>
       <div className="profile border-r-[1px] min-h-screen border-neutral-500">
         <Topbar>
-          <p>{t(`Notifications`)}</p>
+          <div className=" flex  items-center gap-2"><button
+              onClick={() => navigate(-1)}
+              className="p-2 md:hidden block hover:bg-neutral-700 rounded-full transition-colors"
+            >
+              <LuArrowLeft className="size-5 text-neutral-300" />
+            </button>
+            <p className="text-neutral-50 font-semibold">{t(`Notifications`)}</p>
+          </div>
         </Topbar>
 
         {/* Notification content */}
@@ -34,7 +47,7 @@ const Notifications: React.FC = () => {
               </p>
             </div>
           ) : (
-            <div className="mt-6 flex flex-col gap-5">
+            <div className="mt-6 flex max-w-2xl mx-auto flex-col gap-5">
               {notifications.map((notification, index) => {
                 const { type, sender_id, content, created_at, is_read, _id, slug, article_id, isArticle } = notification;
 
@@ -92,6 +105,21 @@ const Notifications: React.FC = () => {
                         isArticle={isArticle!}
                       />
                     );
+                  case 'article':
+                    return (
+                      <PostNotificationContainer
+                        key={index}
+                        username={sender_id}
+                        timestamp={timeAgo(created_at)}
+                        communique={content}
+                        is_read={is_read}
+                        id={_id}
+                        slug={slug}
+                        article_id={article_id!}
+                        type={type}
+                        isArticle={isArticle!}
+                      />
+                    );
                   default:
                     return null; 
                 }
@@ -106,6 +134,7 @@ const Notifications: React.FC = () => {
         <ProfileConfigurations />
       </div>
     </div>
+    </MainContent>
   );
 };
 
