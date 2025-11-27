@@ -2,7 +2,7 @@ import React from "react";
 
 const BlogSkeletonComponent: React.FC = () => {
   return (
-    <div className="mt-5 border-[1px] border-neutral-500 p-2 md:p-4 max-w-2xl bg-background rounded-3xl animate-pulse">
+    <div className="mt-5 border-[1px] border-neutral-500 p-2 md:p-4 w-full bg-background rounded-3xl animate-pulse">
       {/* Profile Section */}
       <div className="flex items-center gap-3 mb-4">
         <div className="w-12 h-12 bg-neutral-700 rounded-full"></div>
