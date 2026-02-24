@@ -1,13 +1,11 @@
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
-import { useUser } from "../../../../hooks/useUser";
 import ThemeSwitcher from "../ThemeSwitcher";
 import { Pics } from "../../../../assets/images";
 import { getVersionDisplayText } from "../../../../constants";
 
 const FooterBottom = () => {
   const { t } = useTranslation();
-  const authState = useUser();
 
   return (
     <div className="bg-background py-8 px-5 md:px-20">
@@ -38,7 +36,7 @@ const FooterBottom = () => {
           </li>
           <li>
             <Link
-              to={`${authState.isLoggedIn ? "Terms&Policies" : "auth"}`}
+              to="/terms-and-conditions"
               className="text-neutral-50 hover:text-primary-400 transition-colors"
             >
               {t("footer.bottom.terms")}
@@ -46,7 +44,7 @@ const FooterBottom = () => {
           </li>
           <li>
             <Link
-              to={`${authState.isLoggedIn ? "Terms&Policies" : "auth"}`}
+              to="/privacy-policy"
               className="text-neutral-50 hover:text-primary-400 transition-colors"
             >
               {t("footer.bottom.policy")}
